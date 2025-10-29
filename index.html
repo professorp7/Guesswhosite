@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Guess Who — Roles (Normal/Admin) + Tabs + Publish</title>
+<title>Guess Who — Public All Packs</title>
 <style>
 :root{--bg:#0f1220;--card:#171a2b;--muted:#8ea0b6;--text:#e7edf6;--accent:#6ec3ff;--glow:#8fd3ff;--gap:16px}
 *{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,Arial,sans-serif;background:var(--bg);color:var(--text)}
@@ -47,9 +47,6 @@ textarea{width:100%;min-height:84px;resize:vertical}
 .split{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
 @media(max-width:900px){.split{grid-template-columns:1fr}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
-.log{max-height:300px;overflow:auto;border-top:1px solid #293153;padding-top:8px;font-size:14px}
-.log .me{color:#9fd3ff}.log .them{color:#98f5a6}
-
 /* Spinner modal */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:50}
 .modal .inner{background:var(--card);border:1px solid #324066;border-radius:18px;padding:16px;max-width:90vw}
@@ -68,7 +65,7 @@ textarea{width:100%;min-height:84px;resize:vertical}
 </head>
 <body>
 <div class="container">
-  <h1 class="h">Guess Who — Roles (Normal/Admin)</h1>
+  <h1 class="h">Guess Who — Public All Packs</h1>
 
   <!-- ROLE BAR -->
   <div class="rolebar card">
@@ -97,12 +94,6 @@ textarea{width:100%;min-height:84px;resize:vertical}
           <button id="demoBoard" class="secondary">Load demo</button>
         </div>
 
-        <div class="row" style="margin-top:8px">
-          <button id="copyShareLink">Copy share link</button>
-          <input id="importUrl" type="text" placeholder="Paste JSON URL or app share link" style="flex:1">
-          <button id="importFromUrl" class="secondary">Import</button>
-        </div>
-
         <label style="margin-top:10px">Add character (name optional) + image</label>
         <div id="pairs" class="list"></div>
         <div class="pair" style="margin-top:8px">
@@ -118,41 +109,34 @@ textarea{width:100%;min-height:84px;resize:vertical}
           <img id="imgPreview" alt="preview">
           <small class="ok">Ready to add ✓</small>
         </div>
+
+        <!-- Slim Public Publish -->
+        <div class="card" style="margin-top:12px">
+          <h3 class="h">Public Publish (Admin)</h3>
+          <div class="row">
+            <input id="pubTitle" placeholder="Pack title (required)" style="flex:1">
+            <input id="pubAuthor" placeholder="Author (optional)" style="flex:.6">
+          </div>
+          <div class="row" style="margin-top:8px">
+            <input id="pubUrl" placeholder="Public Pack JSON URL (required)" style="flex:1">
+            <button id="testLoadPub" class="secondary">Test load</button>
+            <button id="copyGalleryItem">Copy gallery item JSON</button>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <input id="galleryUrl" placeholder="Gallery Index URL (shared public JSON)" style="flex:1">
+            <button id="saveGalleryUrl" class="secondary">Save</button>
+            <button id="prepareUpdatedIndex" class="secondary">Prepare updated public index</button>
+          </div>
+          <small>Everyone who visits will see packs from the <b>Gallery Index URL</b> in Discover.</small>
+          <div style="margin-top:8px">
+            <textarea id="pubPreview" readonly placeholder="Gallery item JSON appears here when fields are filled."></textarea>
+          </div>
+        </div>
       </div>
 
       <div class="card">
         <h2 class="h">Board Preview</h2>
         <div id="creatorGrid" class="grid"></div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:12px">
-      <h2 class="h">Publish your Pack (Admin)</h2>
-      <p>To make a pack show up in <b>Discover</b> for everyone, host your pack JSON publicly (e.g., GitHub raw) and add an entry to a public <b>Gallery Index</b> JSON. Use the helpers below.</p>
-      <div class="row">
-        <label class="secondary" for="uploadToMyPacks" style="padding:10px 12px;border-radius:12px;border:1px solid #243052;cursor:pointer">Upload pack into My Packs<input id="uploadToMyPacks" type="file" accept="application/json" style="display:none"></label>
-        <small>This adds a local gallery entry (only on this device). For public sharing, use a hosted URL and Gallery Index.</small>
-      </div>
-
-      <div class="row" style="margin-top:8px">
-        <input id="pubTitle" placeholder="Pack title (required)" style="flex:1">
-        <input id="pubAuthor" placeholder="Author" style="flex:.7">
-        <input id="pubStars" type="number" min="0" max="999999" placeholder="Stars (optional)" style="width:130px">
-      </div>
-      <div class="row" style="margin-top:8px">
-        <input id="pubUrl" placeholder="Public JSON URL (required for public publish)" style="flex:1">
-        <button id="testLoadPub" class="secondary">Test load</button>
-        <button id="copyGalleryItem">Copy gallery item JSON</button>
-        <button id="addToLocal">Add to My Packs</button>
-      </div>
-      <small>Gallery item JSON: <code>{ "title":"...", "author":"...", "url":"...", "stars":123 }</code></small>
-      <div style="margin-top:8px">
-        <textarea id="pubPreview" readonly placeholder="Your gallery item JSON will appear here when you fill the fields."></textarea>
-      </div>
-
-      <div class="row" style="margin-top:8px">
-        <button id="prepareUpdatedIndex" class="secondary">Prepare updated Gallery Index (download)</button>
-        <small>Fetches the current Gallery Index from <b>Discover</b>, appends your item (if missing), and downloads the new JSON so you can upload it to your host.</small>
       </div>
     </div>
   </section>
@@ -170,62 +154,36 @@ textarea{width:100%;min-height:84px;resize:vertical}
         </div>
         <div class="flex">
           <button id="openSpinner">🎯 Spin for Character</button>
-          <label>Active player
-            <select id="playerSel"><option>Player A</option><option>Player B</option></select>
-          </label>
         </div>
       </div>
       <div id="gridWrap" class="card" style="padding:12px">
         <div id="grid" class="grid"></div>
       </div>
     </div>
-
-    <div class="card" style="margin-top:12px">
-      <h3 class="h">Chat (local)</h3>
-      <div id="chatLog" class="log"></div>
-      <div class="row"><input id="chatMsg" placeholder="Type a message… (Enter to send)"><button id="sendChat">Send</button></div>
-    </div>
   </section>
 
-  <!-- DISCOVER TAB -->
+  <!-- DISCOVER TAB (pulls from PUBLIC index URL) -->
   <section id="browse" class="section hidden">
     <div class="card">
-      <h2 class="h">Discover Packs</h2>
-      <p class="h" style="margin-top:0"><small>Discover lists packs from a public <b>Gallery Index</b> JSON. Admin should paste that URL below. Everyone can then search and load packs.</small></p>
-      <div class="row">
-        <input id="galleryUrl" type="text" placeholder="Gallery Index URL (public JSON array of {title,author,url,stars?})" style="flex:1">
-        <button id="saveGalleryUrl" class="secondary">Save</button>
-        <button id="refreshGallery">Refresh</button>
-      </div>
-      <div class="row" style="margin-top:8px">
-        <input id="searchPacks" type="text" placeholder="Search packs by title/author…" style="flex:1">
+      <h2 class="h">All Packs</h2>
+      <div class="row" style="margin-bottom:8px">
+        <input id="searchPacks" type="text" placeholder="Search packs by title or author…" style="flex:1">
         <button id="clearSearch" class="secondary">Clear</button>
       </div>
-      <small>Tip: Each item links to a raw JSON file that contains <code>{\"board\": [...]}</code>. Click <b>Load</b> to use it instantly.</small>
-    </div>
-
-    <div class="card">
-      <h3 class="h">Popular</h3>
-      <div id="popularList" class="list"></div>
-    </div>
-
-    <div class="card" style="margin-top:12px">
-      <h3 class="h">All Packs</h3>
       <div id="galleryList" class="list"></div>
+      <small>Lists packs from your shared Gallery Index URL.</small>
     </div>
 
     <div class="card" style="margin-top:12px">
-      <h3 class="h">My Packs (local)</h3>
-      <div id="myPacksList" class="list"></div>
-      <div class="row" style="margin-top:8px">
-        <button id="exportMyPacks" class="secondary">Export My Packs JSON</button>
-        <button id="clearMyPacks" class="secondary">Clear My Packs</button>
+      <h3 class="h">Import My Custom Pack (local)</h3>
+      <div class="row">
+        <label class="secondary" for="importLocal" style="padding:10px 12px;border-radius:12px;border:1px solid #243052;cursor:pointer">Choose pack (.json)<input id="importLocal" type="file" accept="application/json" style="display:none"></label>
+        <small>Loads your pack into Play immediately. It does <b>not</b> get added to All Packs.</small>
       </div>
-      <small>“My Packs” are stored only in your browser via localStorage. For truly public sharing, host your JSON and add it to the Gallery Index.</small>
     </div>
   </section>
 
-  <footer class="section"><small>Public discoverability requires a hosted JSON. Admin: maintain a Gallery Index and pack JSON URLs.</small></footer>
+  <footer class="section"><small>To make All Packs public, host your Pack JSONs and a shared Gallery Index JSON, then set the Gallery Index URL above.</small></footer>
 </div>
 
 <!-- Spinner Modal -->
@@ -240,10 +198,8 @@ textarea{width:100%;min-height:84px;resize:vertical}
 <script>
 /* ===== Shared State ===== */
 let board=[],eliminated=new Set(),highlightedTile=null,lastEmbeddedDataURL='';
-let galleryItems=[],filteredItems=[];
-const MY_PACKS_KEY='gw_my_gallery_items';
-const GALLERY_URL_KEY='gw_gallery_url';
 const ADMIN_KEY='gw_is_admin';
+const GALLERY_URL_KEY='gw_public_gallery_url';
 const GAP=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--gap'))||16;
 
 /* Elements */
@@ -260,8 +216,6 @@ const roleBadge=document.getElementById('roleBadge');
 const loginBtn=document.getElementById('loginAdmin');
 const logoutBtn=document.getElementById('logoutAdmin');
 const creatorTab=document.getElementById('creatorTab');
-const browseTab=document.getElementById('browseTab');
-const creatorSection=document.getElementById('creator');
 
 function renderRoleUI(){
   roleText.textContent = isAdmin ? 'Admin' : 'Normal';
@@ -269,23 +223,16 @@ function renderRoleUI(){
   roleBadge.classList.toggle('normal', !isAdmin);
   loginBtn.classList.toggle('hidden', isAdmin);
   logoutBtn.classList.toggle('hidden', !isAdmin);
-
-  // Tabs: hide Creator for Normal users
   creatorTab.style.display = isAdmin ? '' : 'none';
-  // If user is Normal and currently on Creator, bounce to Play
   const activeTab=document.querySelector('.tab.active')?.dataset?.tab;
-  if(!isAdmin && activeTab==='creator'){
-    switchTab('play');
-  }
+  if(!isAdmin && activeTab==='creator'){ switchTab('play'); }
 }
 loginBtn.onclick=()=>{
   const code = prompt('Enter the secret admin code:');
   if(!code) return;
   if(/taylor\s*swift/i.test(code.trim())){
-    isAdmin=true; localStorage.setItem(ADMIN_KEY,'1'); renderRoleUI(); alert('Admin unlocked! Creator tab enabled.');
-  }else{
-    alert('Wrong code.');
-  }
+    isAdmin=true; localStorage.setItem(ADMIN_KEY,'1'); renderRoleUI(); alert('Admin unlocked!');
+  }else{ alert('Wrong code.'); }
 };
 logoutBtn.onclick=()=>{
   isAdmin=false; localStorage.removeItem(ADMIN_KEY); renderRoleUI(); alert('Logged out. Back to Normal.');
@@ -295,13 +242,12 @@ logoutBtn.onclick=()=>{
 const tabs=[...document.querySelectorAll('.tab')];
 const sections={creator:document.getElementById('creator'),play:document.getElementById('play'),browse:document.getElementById('browse')};
 function switchTab(id){
-  // Guard: Creator is admin-only
   if(id==='creator' && !isAdmin){ alert('Creator is for Admin only.'); id='play'; }
   tabs.forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
   Object.keys(sections).forEach(k=>sections[k].classList.toggle('hidden',k!==id));
   if(id==='play'){renderGrid();}
-  if(id==='creator'){renderCreatorGrid();}
-  if(id==='browse'){renderMyPacks();}
+  if(id==='creator'){renderCreatorGrid();restoreGalleryUrlToCreator();}
+  if(id==='browse'){refreshPublicGallery();}
 }
 tabs.forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
 
@@ -393,14 +339,6 @@ imgFile?.addEventListener('change',e=>{
   rdr.readAsDataURL(f)
 });
 
-/* Chat */
-const chatLog=document.getElementById('chatLog');
-function chatAppend(text,who){
-  const d=document.createElement('div');
-  d.innerHTML=`<span class='${who==='A'?'me':'them'}'>${who==='A'?'[A]':'[B]'}</span> ${text}`;
-  chatLog.appendChild(d);chatLog.scrollTop=chatLog.scrollHeight;
-}
-
 /* Fullscreen + auto-size */
 fsBtn.onclick=async()=>{
   const wrap=document.getElementById('gridWrap');
@@ -482,7 +420,6 @@ async function copyShareLink(){
   await navigator.clipboard.writeText(link);
   alert('Share link copied!');
 }
-document.getElementById('copyShareLink')?.addEventListener('click',copyShareLink);
 document.getElementById('copyShareLink2')?.addEventListener('click',copyShareLink);
 
 /* Load from hash on open */
@@ -494,47 +431,20 @@ document.getElementById('copyShareLink2')?.addEventListener('click',copyShareLin
   }
 })();
 
-/* Import from URL */
-async function importFromUrlInput(){
-  const urlOrLink=(document.getElementById('importUrl').value||'').trim();
-  if(!urlOrLink) return;
-  if(/#share=/.test(urlOrLink)){
-    const data=decodeBoardFromHash(urlOrLink);
-    if(!data?.board?.length) return alert('Could not read share link.');
-    board=data.board.map(x=>({id:x.id||crypto.randomUUID(),name:x.name||'',img:x.img||''}));
-    eliminated.clear();highlightedTile=null;renderList();renderCreatorGrid();renderGrid();switchTab('play');
-    return;
-  }
-  try{
-    const resp=await fetch(urlOrLink,{cache:'no-store'});
-    if(!resp.ok) throw new Error('HTTP '+resp.status);
-    const data=await resp.json();
-    if(!data?.board?.length) throw new Error('No board array');
-    board=data.board.map(x=>({id:x.id||crypto.randomUUID(),name:x.name||'',img:x.img||''}));
-    eliminated.clear();highlightedTile=null;renderList();renderCreatorGrid();renderGrid();switchTab('play');
-  }catch(e){
-    alert('Could not import from URL. Make sure it’s a public JSON link (CORS-enabled).');
-  }
-}
-document.getElementById('importFromUrl')?.addEventListener('click',importFromUrlInput);
-
-/* ===== Discover: Gallery + Search + My Packs ===== */
+/* ===== Discover: PUBLIC Gallery Index ===== */
 const galleryList=document.getElementById('galleryList');
-const popularList=document.getElementById('popularList');
-const myPacksList=document.getElementById('myPacksList');
+let galleryItems=[],filteredItems=[];
 
-function renderPackRow(it, idx, source='all'){
+function renderPackRow(it, idx){
   const row=document.createElement('div');row.className='row';row.style.alignItems='center';row.style.justifyContent='space-between';row.style.margin='6px 0';
   const left=document.createElement('div');left.style.display='flex';left.style.alignItems='center';left.style.gap='8px';
   const badge=document.createElement('div');badge.textContent=String(idx+1).padStart(2,'0');
   badge.style.minWidth='28px';badge.style.textAlign='center';badge.style.border='1px solid #2a3152';badge.style.borderRadius='8px';badge.style.padding='4px';
   const meta=document.createElement('div');
-  const stars = (it.stars!=null)?` — ⭐ ${it.stars}`:'';
-  meta.innerHTML=`<b>${it.title||'Untitled'}</b><br><small>by ${it.author||'Unknown'}${stars}</small>`;
+  meta.innerHTML=`<b>${it.title||'Untitled'}</b><br><small>by ${it.author||'Unknown'}</small>`;
   left.appendChild(badge);left.appendChild(meta);
   const actions=document.createElement('div');actions.className='row';actions.style.gap='6px';
-  const openBtn=document.createElement('a');openBtn.textContent='Open JSON';openBtn.href=it.url;openBtn.target='_blank';openBtn.className='secondary';
-  openBtn.style.textDecoration='none';openBtn.style.padding='8px 10px';openBtn.style.borderRadius='10px';openBtn.style.border='1px solid #243052';
+
   const loadBtn=document.createElement('button');loadBtn.textContent='Load';
   loadBtn.onclick=async()=>{
     try{
@@ -546,26 +456,16 @@ function renderPackRow(it, idx, source='all'){
       eliminated.clear();highlightedTile=null;renderList();renderCreatorGrid();renderGrid();switchTab('play');
     }catch(e){ alert('Failed to load this item. Is the URL public and CORS-enabled?'); }
   };
-  actions.appendChild(openBtn);actions.appendChild(loadBtn);
-
-  if(source==='mine'){
-    const del=document.createElement('button');del.textContent='Remove';del.className='secondary';
-    del.onclick=()=>{ removeFromMyPacks(it); };
-    actions.appendChild(del);
-  }
+  actions.appendChild(loadBtn);
 
   row.appendChild(left);row.appendChild(actions);
   return row;
 }
+
 function renderGallery(items){
   galleryList.innerHTML='';
   if(!items.length){galleryList.innerHTML='<small>No packs found.</small>';return;}
-  items.forEach((it,i)=>galleryList.appendChild(renderPackRow(it,i,'all')));
-}
-function renderPopular(items){
-  popularList.innerHTML='';
-  if(!items.length){popularList.innerHTML='<small>No popular packs yet.</small>';return;}
-  items.forEach((it,i)=>popularList.appendChild(renderPackRow(it,i,'all')));
+  items.forEach((it,i)=>galleryList.appendChild(renderPackRow(it,i)));
 }
 function applySearch(){
   const q=(document.getElementById('searchPacks').value||'').toLowerCase().trim();
@@ -573,102 +473,57 @@ function applySearch(){
     galleryItems.filter(it => (it.title||'').toLowerCase().includes(q) || (it.author||'').toLowerCase().includes(q));
   renderGallery(filteredItems);
 }
-async function refreshGallery(){
-  const url=(document.getElementById('galleryUrl').value||'').trim();
-  if(!url){ galleryItems=[]; filteredItems=[]; renderGallery([]); renderPopular([]); return; }
+async function refreshPublicGallery(){
+  const url=localStorage.getItem(GALLERY_URL_KEY)||'';
+  if(!url){ galleryItems=[]; filteredItems=[]; renderGallery([]); return; }
   try{
     const resp=await fetch(url,{cache:'no-store'});
     if(!resp.ok) throw new Error('HTTP '+resp.status);
-    const items=await resp.json(); // expects array of {title, author, url, stars?}
+    const items=await resp.json(); // array of {title, author, url}
     if(!Array.isArray(items)) throw new Error('Index must be an array');
     galleryItems = items;
     applySearch();
-    const popular = [...items].sort((a,b)=> (b.stars||0) - (a.stars||0)).slice(0,10);
-    renderPopular(popular);
   }catch(e){
     alert('Could not fetch gallery index. Make sure it’s a public JSON file with CORS.');
-    galleryItems=[]; filteredItems=[]; renderGallery([]); renderPopular([]);
+    galleryItems=[]; filteredItems=[]; renderGallery([]);
   }
 }
-document.getElementById('refreshGallery').onclick=refreshGallery;
-document.getElementById('saveGalleryUrl').onclick=()=>{
-  const v=(document.getElementById('galleryUrl').value||'').trim();
-  localStorage.setItem(GALLERY_URL_KEY,v);
-  refreshGallery();
-};
 document.getElementById('searchPacks').addEventListener('input',applySearch);
 document.getElementById('clearSearch').onclick=()=>{document.getElementById('searchPacks').value='';applySearch();};
 
-/* My Packs (local) */
-function getMyPacks(){
-  try{ return JSON.parse(localStorage.getItem(MY_PACKS_KEY)||'[]'); }catch{ return []; }
-}
-function setMyPacks(arr){
-  localStorage.setItem(MY_PACKS_KEY, JSON.stringify(arr||[]));
-  renderMyPacks();
-}
-function addToMyPacks(item){
-  const arr=getMyPacks();
-  if(!arr.find(x=>x.url===item.url)){ arr.push(item); setMyPacks(arr); alert('Added to My Packs!'); }
-  else alert('Already in My Packs.');
-}
-function removeFromMyPacks(item){
-  const arr=getMyPacks().filter(x=>x.url!==item.url);
-  setMyPacks(arr);
-}
-function renderMyPacks(){
-  const mine=getMyPacks();
-  const host=document.getElementById('myPacksList'); host.innerHTML='';
-  if(!mine.length){ host.innerHTML='<small>No local packs yet.</small>'; return; }
-  mine.forEach((it,i)=> host.appendChild(renderPackRow(it,i,'mine')) );
-}
-document.getElementById('exportMyPacks').onclick=()=>{
-  const arr=getMyPacks();
-  const blob=new Blob([JSON.stringify(arr,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='my-packs.json';a.click();
-};
-document.getElementById('clearMyPacks').onclick=()=>{
-  if(confirm('Clear all My Packs?')) setMyPacks([]);
-};
-(function restoreGalleryUrl(){
-  const v=localStorage.getItem(GALLERY_URL_KEY)||'';
-  document.getElementById('galleryUrl').value=v;
-  if(v) refreshGallery();
-  renderMyPacks();
-})();
-
-/* Publish helpers (Admin) */
+/* Creator: Public Publish helpers */
 function currentGalleryItem(){
   const title=(document.getElementById('pubTitle').value||'').trim();
-  const author=(document.getElementById('pubAuthor').value||'').trim();
+  const author=(document.getElementById('pubAuthor').value||'').trim() || 'Admin';
   const url=(document.getElementById('pubUrl').value||'').trim();
-  const starsVal=(document.getElementById('pubStars').value||'').trim();
-  const item={ title, author, url };
-  if(starsVal) item.stars = Number(starsVal)||0;
-  return item;
+  return { title, author, url };
 }
 function updatePubPreview(){
   const item=currentGalleryItem();
   document.getElementById('pubPreview').value = JSON.stringify(item, null, 2);
 }
-['pubTitle','pubAuthor','pubUrl','pubStars'].forEach(id=>{
+['pubTitle','pubAuthor','pubUrl'].forEach(id=>{
   const el=document.getElementById(id); el?.addEventListener('input',updatePubPreview);
 });
 document.getElementById('copyGalleryItem')?.addEventListener('click',async()=>{
   const item=currentGalleryItem();
-  if(!item.title || !item.url){ alert('Title and Public JSON URL are required.'); return; }
+  if(!item.title || !item.url){ alert('Title and Public Pack URL are required.'); return; }
   const text=JSON.stringify(item,null,2);
   try{ await navigator.clipboard.writeText(text); alert('Gallery item JSON copied!'); }catch{ alert('Could not copy.'); }
 });
-document.getElementById('addToLocal')?.addEventListener('click',()=>{
-  const item=currentGalleryItem();
-  if(!item.title || !item.url){ alert('Title and Public JSON URL are required.'); return; }
-  addToMyPacks(item);
-  switchTab('browse');
-});
+function restoreGalleryUrlToCreator(){
+  const v=localStorage.getItem(GALLERY_URL_KEY)||'';
+  document.getElementById('galleryUrl').value=v;
+}
+document.getElementById('saveGalleryUrl').onclick=()=>{
+  const v=(document.getElementById('galleryUrl').value||'').trim();
+  localStorage.setItem(GALLERY_URL_KEY,v);
+  alert('Saved Gallery Index URL. Discover will use this for everyone visiting this site.');
+  refreshPublicGallery();
+};
 document.getElementById('testLoadPub')?.addEventListener('click',async()=>{
   const item=currentGalleryItem();
-  if(!item.url){ alert('Enter a Public JSON URL first.'); return; }
+  if(!item.url){ alert('Enter a Public Pack URL first.'); return; }
   try{
     const resp=await fetch(item.url,{cache:'no-store'});
     if(!resp.ok) throw new Error('HTTP '+resp.status);
@@ -682,9 +537,9 @@ document.getElementById('testLoadPub')?.addEventListener('click',async()=>{
 });
 document.getElementById('prepareUpdatedIndex')?.addEventListener('click', async ()=>{
   const idxUrl=(document.getElementById('galleryUrl').value||'').trim();
-  if(!idxUrl){ return alert('Set a Gallery Index URL in Discover first.'); }
+  if(!idxUrl){ return alert('Set a Gallery Index URL first.'); }
   const item=currentGalleryItem();
-  if(!item.title || !item.url){ return alert('Fill out Title and Public JSON URL first.'); }
+  if(!item.title || !item.url){ return alert('Fill out Title and Public Pack URL first.'); }
   let arr=[];
   try{
     const r=await fetch(idxUrl,{cache:'no-store'});
@@ -696,45 +551,21 @@ document.getElementById('prepareUpdatedIndex')?.addEventListener('click', async 
   alert('Downloaded updated Gallery Index. Upload it to your host to publish!');
 });
 
-/* Upload pack into My Packs (local) */
-const uploadToMyPacks=document.getElementById('uploadToMyPacks');
-uploadToMyPacks?.addEventListener('change', async (e)=>{
+/* Discover: Import My Custom Pack (local) */
+document.getElementById('importLocal')?.addEventListener('change', async (e)=>{
   const f=e.target.files?.[0];
   if(!f) return;
   try{
     const txt=await f.text();
     const data=JSON.parse(txt);
     if(!data?.board?.length) throw new Error('No board array');
-    const item={
-      title: f.name.replace(/\.json$/i,'').slice(0,60),
-      author: 'Me',
-      url: '',
-      stars: 0
-    };
-    const key='pack_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
-    localStorage.setItem(key, JSON.stringify(data));
-    item.url = 'gw-local://'+key;
-
-    // Patch fetch for gw-local://
-    if(!window.__gwLocalURLPatched){
-      const origFetch=window.fetch.bind(window);
-      window.fetch=async function(resource, init){
-        if(typeof resource==='string' && resource.startsWith('gw-local://')){
-          const k=resource.replace('gw-local://','');
-          const raw=localStorage.getItem(k) || 'null';
-          return new Response(raw, { status: 200, headers: { 'Content-Type':'application/json' } });
-        }
-        return origFetch(resource, init);
-      };
-      window.__gwLocalURLPatched=true;
-    }
-
-    addToMyPacks(item);
-    alert('Uploaded into My Packs! Find it under Discover → My Packs.');
-    e.target.value='';
-    switchTab('browse');
+    board=data.board.map(x=>({id:x.id||crypto.randomUUID(),name:x.name||'',img:x.img||''}));
+    eliminated.clear();highlightedTile=null;renderList();renderCreatorGrid();renderGrid();
+    switchTab('play');
   }catch(err){
     alert('Could not read that file. Is it a valid pack JSON with a "board" array?');
+  }finally{
+    e.target.value='';
   }
 });
 
@@ -756,16 +587,10 @@ document.getElementById('addChar')?.addEventListener('click',()=>{
 });
 document.getElementById('clearXs')?.addEventListener('click',()=>{eliminated.clear();renderGrid()});
 document.getElementById('shuffle')?.addEventListener('click',shuffle);
-const playerSel=document.getElementById('playerSel');const chatMsg=document.getElementById('chatMsg');
-document.getElementById('sendChat')?.addEventListener('click',()=>{
-  const text=chatMsg.value.trim();if(!text)return;
-  chatAppend(text,playerSel.selectedIndex===0?'A':'B');chatMsg.value='';chatMsg.focus()
-});
-chatMsg?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('sendChat').click()}});
 
 /* Init */
 renderRoleUI();
-switchTab('play');renderCreatorGrid();renderGrid();
+switchTab('play');renderCreatorGrid();renderGrid();refreshPublicGallery();restoreGalleryUrlToCreator();
 </script>
 </body>
 </html>
