@@ -168,7 +168,7 @@ textarea{width:100%;min-height:84px;resize:vertical}
     </div>
   </section>
 
-  <!-- DISCOVER TAB (pulls from PUBLIC index URL) -->
+  <!-- DISCOVER TAB (pulls from PUBLIC index URL or built-in fallback) -->
   <section id="browse" class="section hidden">
     <div class="card">
       <h2 class="h">All Packs</h2>
@@ -177,7 +177,7 @@ textarea{width:100%;min-height:84px;resize:vertical}
         <button id="clearSearch" class="secondary">Clear</button>
       </div>
       <div id="galleryList" class="list"></div>
-      <small>Lists packs from your shared Gallery Index URL.</small>
+      <small>Lists packs from your shared Gallery Index URL—or the built-in list if none is set.</small>
     </div>
 
     <div class="card" style="margin-top:12px">
@@ -189,7 +189,7 @@ textarea{width:100%;min-height:84px;resize:vertical}
     </div>
   </section>
 
-  <footer class="section"><small>Public packs: host Pack JSONs + a single Gallery Index JSON. Set the Gallery URL in Creator → Public Publish.</small></footer>
+  <footer class="section"><small>Public packs: host Pack JSONs + a single Gallery Index JSON. Set the Gallery URL in Creator → Public Publish. If none is set, built-in packs are shown.</small></footer>
 </div>
 
 <!-- Spinner Modal -->
@@ -207,6 +207,14 @@ let board=[],eliminated=new Set(),highlightedTile=null,lastEmbeddedDataURL='';
 const ADMIN_KEY='gw_is_admin';
 const GALLERY_URL_KEY='gw_public_gallery_url';
 const GAP=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--gap'))||16;
+
+/* ===== Built-in Public Gallery (hard-coded + fallback) =====
+   Put your ready-to-use, CORS-safe pack URLs here (e.g., GitHub Pages).
+   These appear in Discover when no remote index is set, or if fetch fails. */
+const BUILTIN_GALLERY = [
+  { title: "Pokemon 1–50", author: "Preston Diamond", url: "https://professorp7.github.io/Guesswhosite/Pokemon-1-50.json" },
+  { title: "PVZ Guess Who", author: "Preston Diamond", url: "https://professorp7.github.io/Guesswhosite/Pvz-guess-who.json" }
+];
 
 /* Elements */
 const grid=document.getElementById('grid');
@@ -438,7 +446,7 @@ document.getElementById('copyShareLink2')?.addEventListener('click',copyShareLin
   }
 })();
 
-/* ===== Discover: PUBLIC Gallery Index ===== */
+/* ===== Discover: PUBLIC Gallery Index (with built-in fallback) ===== */
 const galleryList=document.getElementById('galleryList');
 let galleryItems=[],filteredItems=[];
 
@@ -493,22 +501,31 @@ function applySearch(){
 }
 async function refreshPublicGallery(){
   const url=localStorage.getItem(GALLERY_URL_KEY)||'';
-  updateGalleryChip(url);
-  if(!url){ galleryItems=[]; filteredItems=[]; renderGallery([]); return; }
+  updateGalleryChip(url || 'Built-in');
+  // If no URL set → use built-in immediately
+  if(!url){
+    galleryItems=[...BUILTIN_GALLERY];
+    applySearch();
+    return;
+  }
+  // Try remote first; fallback to built-in on any error
   try{
     const resp=await fetch(url,{cache:'no-store'});
     if(!resp.ok) throw new Error('HTTP '+resp.status);
     const items=await resp.json(); // array of {title, author, url}
     if(!Array.isArray(items)) throw new Error('Index must be an array');
-    // Defensive: ensure each item has expected fields (avoid ghost entries)
     galleryItems = items
       .filter(Boolean)
       .map(x => ({ title: (x.title||'').toString(), author: (x.author||'').toString(), url: (x.url||'').toString() }))
       .filter(x => x.url); // require url
+    // Merge in any built-ins that aren't already present (by URL)
+    const known=new Set(galleryItems.map(x=>x.url));
+    for(const it of BUILTIN_GALLERY){ if(!known.has(it.url)) galleryItems.push(it); }
     applySearch();
   }catch(e){
-    alert('Could not fetch gallery index. Make sure it’s a public JSON file with CORS.');
-    galleryItems=[]; filteredItems=[]; renderGallery([]);
+    galleryItems=[...BUILTIN_GALLERY];
+    applySearch();
+    alert('Could not fetch gallery index, showing built-in packs instead.');
   }
 }
 document.getElementById('searchPacks').addEventListener('input',applySearch);
@@ -524,14 +541,15 @@ function removeItemFromGallery(idx){
   if(!removed.length){ return; }
   const blob=new Blob([JSON.stringify(arr,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='gallery-index.json';a.click();
-  alert('Updated gallery-index.json downloaded without that item. Upload it to GitHub to publish the removal.');
+  alert('Updated gallery-index.json downloaded without that item. Upload it to your host to publish the removal.');
 }
 
-/* Creator: Public Publish helpers */
+/* Creator: Public Publish helpers (default author: Preston Diamond) */
 function currentGalleryItem(){
   const title=(document.getElementById('pubTitle').value||'').trim();
-  const author=(document.getElementById('pubAuthor').value||'').trim();
+  const authorRaw=(document.getElementById('pubAuthor').value||'').trim();
   const url=(document.getElementById('pubUrl').value||'').trim();
+  const author=authorRaw || 'Preston Diamond';
   return { title, author, url };
 }
 function updatePubPreview(){
@@ -626,14 +644,14 @@ document.getElementById('addChar')?.addEventListener('click',()=>{
 document.getElementById('clearXs')?.addEventListener('click',()=>{eliminated.clear();renderGrid()});
 document.getElementById('shuffle')?.addEventListener('click',shuffle);
 
-/* Status chip for gallery URL */
+/* Status chip for gallery URL (shows "Built-in" when using hard-coded list) */
 function updateGalleryChip(url){
-  const has=!!url;
-  galleryChip.classList.toggle('ok',has);
-  galleryChip.classList.toggle('err',!has);
-  galleryChip.innerHTML = has
-    ? `<small>Gallery: <code style="font-family:monospace">${escapeHtml(url)}</code></small>`
-    : `<small>Gallery: not set</small>`;
+  const builtIn = !url || url === 'Built-in';
+  galleryChip.classList.toggle('ok', true);
+  galleryChip.classList.toggle('err', false);
+  galleryChip.innerHTML = builtIn
+    ? `<small>Gallery: <b>Built-in</b> (hard-coded)</small>`
+    : `<small>Gallery: <code style="font-family:monospace">${escapeHtml(url)}</code></small>`;
 }
 
 /* Utilities */
@@ -642,7 +660,7 @@ function escapeHtml(str){return (str||'').replace(/[&<>"']/g,s=>({ '&':'&amp;','
 /* Init */
 renderRoleUI();
 switchTab('play');renderCreatorGrid();renderGrid();refreshPublicGallery();restoreGalleryUrlToCreator();
-updateGalleryChip(localStorage.getItem(GALLERY_URL_KEY)||'');
+updateGalleryChip(localStorage.getItem(GALLERY_URL_KEY)||'Built-in');
 </script>
 </body>
 </html>
