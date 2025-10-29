@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Guess Who — Public All Packs</title>
+<title>Guess Who — Single-File (Built-in Gallery + Self-Save)</title>
 <style>
 :root{--bg:#0f1220;--card:#171a2b;--muted:#8ea0b6;--text:#e7edf6;--accent:#6ec3ff;--glow:#8fd3ff;--gap:16px}
 *{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,Arial,sans-serif;background:var(--bg);color:var(--text)}
@@ -17,6 +17,7 @@ button.secondary{background:#0b0e1a;color:#e7edf6;border-color:#243052}
 small{color:var(--muted)}
 .hidden{display:none !important}
 textarea{width:100%;min-height:84px;resize:vertical}
+code{background:#0b0e1a;padding:2px 6px;border-radius:6px;border:1px solid #243052}
 
 /* Tabs */
 .tabs{display:flex;gap:8px;position:sticky;top:0;background:linear-gradient(#0f1220, #0f1220f0);padding-bottom:8px;z-index:5}
@@ -64,21 +65,20 @@ textarea{width:100%;min-height:84px;resize:vertical}
 
 /* Status chip */
 .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #2a3152;border-radius:999px;padding:6px 10px;background:#0b0e1a}
-.chip.ok{border-color:#315a2e}
-.chip.err{border-color:#5a2e31}
 </style>
 </head>
 <body>
 <div class="container">
-  <h1 class="h">Guess Who — Public All Packs</h1>
+  <h1 class="h">Guess Who — Single-File</h1>
 
   <!-- ROLE BAR -->
   <div class="rolebar card">
     <div id="roleBadge" class="badge normal"><span class="dot"></span><b>Role:</b> <span id="roleText">Normal</span></div>
     <div class="row">
-      <div id="galleryChip" class="chip"><small>Gallery: not set</small></div>
+      <div id="galleryChip" class="chip"><small>Gallery: <b>Builtin</b> (saved inside this file)</small></div>
       <button id="loginAdmin" class="secondary">Admin Login</button>
       <button id="logoutAdmin" class="secondary hidden">Logout</button>
+      <button id="downloadSite" title="Download updated HTML with your built-in gallery">⬇ Save Site (.html)</button>
     </div>
   </div>
 
@@ -92,11 +92,14 @@ textarea{width:100%;min-height:84px;resize:vertical}
   <section id="creator" class="section hidden">
     <div class="split">
       <div class="card builder">
-        <h2 class="h">Create a Board</h2>
+        <h2 class="h">Create a Board / Add to Built-in Gallery</h2>
+
         <div class="row">
           <button id="newBoard">New board</button>
-          <button id="downloadBoard" class="secondary">Download (.json)</button>
-          <label class="secondary" for="uploadBoard" style="padding:10px 12px;border-radius:12px;border:1px solid #243052;cursor:pointer">Upload pack (.json)<input id="uploadBoard" type="file" accept="application/json" style="display:none"></label>
+          <button id="downloadBoard" class="secondary">Download Pack (.json)</button>
+          <label class="secondary" for="uploadBoard" style="padding:10px 12px;border-radius:12px;border:1px solid #243052;cursor:pointer">
+            Upload Pack (.json)<input id="uploadBoard" type="file" accept="application/json" style="display:none">
+          </label>
           <button id="demoBoard" class="secondary">Load demo</button>
         </div>
 
@@ -108,35 +111,29 @@ textarea{width:100%;min-height:84px;resize:vertical}
           <button id="addChar">Add</button>
         </div>
         <div class="row" style="margin-top:8px">
-          <label id="pickLabel" class="secondary" for="imgFile" style="padding:10px 12px;border-radius:12px;border:1px solid #243052;cursor:pointer">…or pick an image file<input id="imgFile" type="file" accept="image/*" style="display:none"></label>
-          <small>Picked files are embedded as Data URLs so exports still work offline.</small>
+          <label id="pickLabel" class="secondary" for="imgFile" style="padding:10px 12px;border-radius:12px;border:1px solid #243052;cursor:pointer">
+            …or pick an image file<input id="imgFile" type="file" accept="image/*" style="display:none">
+          </label>
+          <small>Picked files embed as Data URLs, so packs work offline.</small>
         </div>
         <div class="preview" id="imgPreviewWrap" style="display:none">
-          <img id="imgPreview" alt="preview">
-          <small class="ok">Ready to add ✓</small>
+          <img id="imgPreview" alt="preview"><small class="ok">Ready to add ✓</small>
         </div>
 
-        <!-- Slim Public Publish -->
+        <!-- Add to Built-in Gallery -->
         <div class="card" style="margin-top:12px">
-          <h3 class="h">Public Publish (Admin)</h3>
+          <h3 class="h">Add this Pack to Built-in Gallery</h3>
           <div class="row">
             <input id="pubTitle" placeholder="Pack title (required)" style="flex:1">
-            <input id="pubAuthor" placeholder="Author (optional)" style="flex:.6">
+            <input id="pubAuthor" placeholder="Author (optional, default: Preston Diamond)" style="flex:.8">
           </div>
           <div class="row" style="margin-top:8px">
-            <input id="pubUrl" placeholder="Public Pack JSON URL (required)" style="flex:1">
-            <button id="testLoadPub" class="secondary">Test load</button>
-            <button id="copyGalleryItem">Copy gallery item JSON</button>
+            <button id="addCurrentToBuiltin">Add Current Board</button>
+            <label class="secondary" for="importLocalToBuiltin" style="padding:10px 12px;border-radius:12px;border:1px solid #243052;cursor:pointer">
+              Add From File (.json)<input id="importLocalToBuiltin" type="file" accept="application/json" style="display:none">
+            </label>
           </div>
-          <div class="row" style="margin-top:8px">
-            <input id="galleryUrl" placeholder="Gallery Index URL (shared public JSON)" style="flex:1">
-            <button id="saveGalleryUrl" class="secondary">Save</button>
-            <button id="prepareUpdatedIndex" class="secondary">Prepare updated public index</button>
-          </div>
-          <small>Everyone will see packs from the <b>Gallery Index URL</b> in Discover.</small>
-          <div style="margin-top:8px">
-            <textarea id="pubPreview" readonly placeholder="Gallery item JSON appears here when fields are filled."></textarea>
-          </div>
+          <small>These items are saved inside this HTML when you press <b>“Save Site (.html)”</b>.</small>
         </div>
       </div>
 
@@ -168,28 +165,35 @@ textarea{width:100%;min-height:84px;resize:vertical}
     </div>
   </section>
 
-  <!-- DISCOVER TAB (pulls from PUBLIC index URL or built-in fallback) -->
+  <!-- DISCOVER TAB (Only built-in data; no network) -->
   <section id="browse" class="section hidden">
     <div class="card">
-      <h2 class="h">All Packs</h2>
+      <h2 class="h">All Packs (Built-in)</h2>
       <div class="row" style="margin-bottom:8px">
         <input id="searchPacks" type="text" placeholder="Search packs by title or author…" style="flex:1">
         <button id="clearSearch" class="secondary">Clear</button>
       </div>
       <div id="galleryList" class="list"></div>
-      <small>Lists packs from your shared Gallery Index URL—or the built-in list if none is set.</small>
+      <small>Completely offline. To add more, use Creator → “Add to Built-in Gallery”, then press <b>Save Site (.html)</b>.</small>
     </div>
 
     <div class="card" style="margin-top:12px">
-      <h3 class="h">Import My Custom Pack (local)</h3>
+      <h3 class="h">Import My Custom Pack (local to play only)</h3>
       <div class="row">
-        <label class="secondary" for="importLocal" style="padding:10px 12px;border-radius:12px;border:1px solid #243052;cursor:pointer">Choose pack (.json)<input id="importLocal" type="file" accept="application/json" style="display:none"></label>
-        <small>Loads your pack into Play immediately. It does <b>not</b> get added to All Packs.</small>
+        <label class="secondary" for="importLocal" style="padding:10px 12px;border-radius:12px;border:1px solid #243052;cursor:pointer">
+          Choose pack (.json)<input id="importLocal" type="file" accept="application/json" style="display:none">
+        </label>
+        <small>Loads your pack into Play immediately. It does <b>not</b> change the built-in gallery.</small>
       </div>
     </div>
   </section>
 
-  <footer class="section"><small>Public packs: host Pack JSONs + a single Gallery Index JSON. Set the Gallery URL in Creator → Public Publish. If none is set, built-in packs are shown.</small></footer>
+  <footer class="section">
+    <small>
+      Single-file mode: All gallery content is stored <i>inside</i> this HTML.  
+      Use <b>Save Site (.html)</b> to download an updated file with your changes baked in.
+    </small>
+  </footer>
 </div>
 
 <!-- Spinner Modal -->
@@ -202,29 +206,67 @@ textarea{width:100%;min-height:84px;resize:vertical}
 </div>
 
 <script>
-/* ===== Shared State ===== */
+/* ===== Core State ===== */
 let board=[],eliminated=new Set(),highlightedTile=null,lastEmbeddedDataURL='';
 const ADMIN_KEY='gw_is_admin';
-const GALLERY_URL_KEY='gw_public_gallery_url';
 const GAP=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--gap'))||16;
 
-/* ===== Built-in Public Gallery (hard-coded + fallback) =====
-   Put your ready-to-use, CORS-safe pack URLs here (e.g., GitHub Pages).
-   These appear in Discover when no remote index is set, or if fetch fails. */
-const BUILTIN_GALLERY = [
-  { title: "Pokemon 1–50", author: "Preston Diamond", url: "https://professorp7.github.io/Guesswhosite/Pokemon-1-50.json" },
-  { title: "PVZ Guess Who", author: "Preston Diamond", url: "https://professorp7.github.io/Guesswhosite/Pvz-guess-who.json" }
-];
+/* ===== BUILT-IN GALLERY (packs embedded directly) =====
+   This array is saved INSIDE the HTML. When you press "Save Site", this gets rewritten.
+   Each item has: { title, author, pack }
+   'pack' is the full JSON object like {version:1, board:[...]}.
+   You can pre-seed with your own packs here.
+*/
+const BUILTIN_PACKS = /*__PACKS__*/
+[
+  {
+    "title": "Pokemon 1–50",
+    "author": "Preston Diamond",
+    "pack": {
+      "version": 1,
+      "board": [
+        /* Example minimal placeholders — swap with your real 50 */
+        {"id":"pkm1","name":"Bulbasaur","img":""},
+        {"id":"pkm2","name":"Ivysaur","img":""},
+        {"id":"pkm3","name":"Venusaur","img":""},
+        {"id":"pkm4","name":"Charmander","img":""},
+        {"id":"pkm5","name":"Charmeleon","img":""},
+        {"id":"pkm6","name":"Charizard","img":""},
+        {"id":"pkm7","name":"Squirtle","img":""},
+        {"id":"pkm8","name":"Wartortle","img":""},
+        {"id":"pkm9","name":"Blastoise","img":""},
+        {"id":"pkm10","name":"Caterpie","img":""},
+        {"id":"pkm11","name":"Metapod","img":""},
+        {"id":"pkm12","name":"Butterfree","img":""}
+      ]
+    }
+  },
+  {
+    "title": "PVZ Guess Who",
+    "author": "Preston Diamond",
+    "pack": {
+      "version": 1,
+      "board": [
+        {"id":"pvz1","name":"Peashooter","img":""},
+        {"id":"pvz2","name":"Sunflower","img":""},
+        {"id":"pvz3","name":"Wall-nut","img":""},
+        {"id":"pvz4","name":"Zombie","img":""}
+      ]
+    }
+  }
+]
+/*__END_PACKS__*/
 
-/* Elements */
+/* ===== Elements ===== */
 const grid=document.getElementById('grid');
 const creatorGrid=document.getElementById('creatorGrid');
 const pairs=document.getElementById('pairs');
 const imgFile=document.getElementById('imgFile');
 const fsBtn=document.getElementById('fullscreenBtn');
 const galleryChip=document.getElementById('galleryChip');
+const downloadSiteBtn=document.getElementById('downloadSite');
 
-/* ===== Role Handling ===== */
+/* ===== Roles ===== */
 let isAdmin = localStorage.getItem(ADMIN_KEY)==='1';
 const roleText=document.getElementById('roleText');
 const roleBadge=document.getElementById('roleBadge');
@@ -261,12 +303,12 @@ function switchTab(id){
   tabs.forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
   Object.keys(sections).forEach(k=>sections[k].classList.toggle('hidden',k!==id));
   if(id==='play'){renderGrid();}
-  if(id==='creator'){renderCreatorGrid();restoreGalleryUrlToCreator();}
-  if(id==='browse'){refreshPublicGallery();}
+  if(id==='creator'){renderCreatorGrid();}
+  if(id==='browse'){renderBuiltinGallery();}
 }
 tabs.forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
 
-/* ===== Builder: list + grids ===== */
+/* ===== Builder UI ===== */
 function renderList(){
   pairs.innerHTML='';
   board.forEach((c,i)=>{
@@ -322,10 +364,10 @@ function addChar(name,img){
   renderList(); renderCreatorGrid(); renderGrid();
 }
 
-/* Download/Upload */
+/* Download/Upload Pack */
 function downloadBoard(){
   const blob=new Blob([JSON.stringify({version:1,board},null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='guess-who-board.json';a.click()
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='guess-who-pack.json';a.click()
 }
 function uploadBoard(file){
   const r=new FileReader();
@@ -342,7 +384,7 @@ function uploadBoard(file){
 }
 function shuffle(){for(let i=board.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[board[i],board[j]]=[board[j],board[i]];}renderList();renderCreatorGrid();renderGrid()}
 
-/* File picker: embed and preview */
+/* File picker: embed and preview image */
 imgFile?.addEventListener('change',e=>{
   const f=e.target.files?.[0];if(!f)return;
   const rdr=new FileReader();
@@ -355,6 +397,7 @@ imgFile?.addEventListener('change',e=>{
 });
 
 /* Fullscreen + auto-size */
+const fsBtn=document.getElementById('fullscreenBtn');
 fsBtn.onclick=async()=>{
   const wrap=document.getElementById('gridWrap');
   if(!document.fullscreenElement){await wrap.requestFullscreen?.();fsBtn.textContent='Exit Fullscreen';setTimeout(autoSizeFullscreen,10);}
@@ -446,48 +489,41 @@ document.getElementById('copyShareLink2')?.addEventListener('click',copyShareLin
   }
 })();
 
-/* ===== Discover: PUBLIC Gallery Index (with built-in fallback) ===== */
+/* ===== Discover: BUILT-IN ONLY ===== */
 const galleryList=document.getElementById('galleryList');
-let galleryItems=[],filteredItems=[];
-
+let galleryItems=[]; // derived from BUILTIN_PACKS
+function builtinToList(){
+  return BUILTIN_PACKS.map(x=>({title:x.title||'Untitled',author:x.author||'Unknown',pack:x.pack}));
+}
 function renderPackRow(it, idx){
   const row=document.createElement('div');row.className='row';row.style.alignItems='center';row.style.justifyContent='space-between';row.style.margin='6px 0';
   const left=document.createElement('div');left.style.display='flex';left.style.alignItems='center';left.style.gap='8px';
   const badge=document.createElement('div');badge.textContent=String(idx+1).padStart(2,'0');
   badge.style.minWidth='28px';badge.style.textAlign='center';badge.style.border='1px solid #2a3152';badge.style.borderRadius='8px';badge.style.padding='4px';
   const meta=document.createElement('div');
-  const safeTitle = (it.title||'Untitled');
-  const safeAuthor = (it.author||'Unknown');
-  const safeUrl = (it.url||'');
-  meta.innerHTML=`<b>${escapeHtml(safeTitle)}</b><br><small>by ${escapeHtml(safeAuthor)}</small>`;
+  meta.innerHTML=`<b>${escapeHtml(it.title)}</b><br><small>by ${escapeHtml(it.author)}</small>`;
   left.appendChild(badge);left.appendChild(meta);
 
   const actions=document.createElement('div');actions.className='row';actions.style.gap='6px';
-
   const loadBtn=document.createElement('button');loadBtn.textContent='Load';
-  loadBtn.onclick=async()=>{
+  loadBtn.onclick=()=>{
     try{
-      const resp=await fetch(safeUrl,{cache:'no-store'});
-      if(!resp.ok) throw new Error('HTTP '+resp.status);
-      const data=await resp.json();
+      const data=it.pack;
       if(!data?.board?.length) throw new Error('No board array');
       board=data.board.map(x=>({id:x.id||crypto.randomUUID(),name:x.name||'',img:x.img||''}));
       eliminated.clear();highlightedTile=null;renderList();renderCreatorGrid();renderGrid();switchTab('play');
-    }catch(e){ alert('Failed to load this item. Is the URL public and CORS-enabled?'); }
+    }catch(e){ alert('Failed to load this item.'); }
   };
   actions.appendChild(loadBtn);
 
   if(isAdmin){
-    const removeBtn=document.createElement('button');removeBtn.textContent='Remove';
-    removeBtn.className='secondary';
-    removeBtn.onclick=()=>removeItemFromGallery(idx);
+    const removeBtn=document.createElement('button');removeBtn.textContent='Remove';removeBtn.className='secondary';
+    removeBtn.onclick=()=>{ if(confirm('Remove from built-in gallery (requires Save Site to persist)?')){ BUILTIN_PACKS.splice(idx,1); renderBuiltinGallery(); } };
     actions.appendChild(removeBtn);
   }
-
   row.appendChild(left);row.appendChild(actions);
   return row;
 }
-
 function renderGallery(items){
   galleryList.innerHTML='';
   if(!items.length){galleryList.innerHTML='<small>No packs found.</small>';return;}
@@ -495,119 +531,40 @@ function renderGallery(items){
 }
 function applySearch(){
   const q=(document.getElementById('searchPacks').value||'').toLowerCase().trim();
-  filteredItems = !q ? [...galleryItems] :
-    galleryItems.filter(it => (it.title||'').toLowerCase().includes(q) || (it.author||'').toLowerCase().includes(q));
-  renderGallery(filteredItems);
+  const base = builtinToList();
+  galleryItems = !q ? base : base.filter(it =>
+    (it.title||'').toLowerCase().includes(q) || (it.author||'').toLowerCase().includes(q)
+  );
+  renderGallery(galleryItems);
 }
-async function refreshPublicGallery(){
-  const url=localStorage.getItem(GALLERY_URL_KEY)||'';
-  updateGalleryChip(url || 'Built-in');
-  // If no URL set → use built-in immediately
-  if(!url){
-    galleryItems=[...BUILTIN_GALLERY];
-    applySearch();
-    return;
-  }
-  // Try remote first; fallback to built-in on any error
-  try{
-    const resp=await fetch(url,{cache:'no-store'});
-    if(!resp.ok) throw new Error('HTTP '+resp.status);
-    const items=await resp.json(); // array of {title, author, url}
-    if(!Array.isArray(items)) throw new Error('Index must be an array');
-    galleryItems = items
-      .filter(Boolean)
-      .map(x => ({ title: (x.title||'').toString(), author: (x.author||'').toString(), url: (x.url||'').toString() }))
-      .filter(x => x.url); // require url
-    // Merge in any built-ins that aren't already present (by URL)
-    const known=new Set(galleryItems.map(x=>x.url));
-    for(const it of BUILTIN_GALLERY){ if(!known.has(it.url)) galleryItems.push(it); }
-    applySearch();
-  }catch(e){
-    galleryItems=[...BUILTIN_GALLERY];
-    applySearch();
-    alert('Could not fetch gallery index, showing built-in packs instead.');
-  }
-}
+function renderBuiltinGallery(){ applySearch(); }
 document.getElementById('searchPacks').addEventListener('input',applySearch);
 document.getElementById('clearSearch').onclick=()=>{document.getElementById('searchPacks').value='';applySearch();};
 
-/* Remove item (Admin): download updated gallery without the item */
-function removeItemFromGallery(idx){
-  if(!isAdmin){ return alert('Admin only.'); }
-  const url=localStorage.getItem(GALLERY_URL_KEY)||'';
-  if(!url){ return alert('Set the Gallery Index URL in Creator first.'); }
-  const arr=[...galleryItems];
-  const removed=arr.splice(idx,1);
-  if(!removed.length){ return; }
-  const blob=new Blob([JSON.stringify(arr,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='gallery-index.json';a.click();
-  alert('Updated gallery-index.json downloaded without that item. Upload it to your host to publish the removal.');
-}
-
-/* Creator: Public Publish helpers (default author: Preston Diamond) */
-function currentGalleryItem(){
-  const title=(document.getElementById('pubTitle').value||'').trim();
-  const authorRaw=(document.getElementById('pubAuthor').value||'').trim();
-  const url=(document.getElementById('pubUrl').value||'').trim();
-  const author=authorRaw || 'Preston Diamond';
-  return { title, author, url };
-}
-function updatePubPreview(){
-  const item=currentGalleryItem();
-  document.getElementById('pubPreview').value = JSON.stringify(item, null, 2);
-}
-['pubTitle','pubAuthor','pubUrl'].forEach(id=>{
-  const el=document.getElementById(id); el?.addEventListener('input',updatePubPreview);
+/* Add to built-in gallery */
+function getAuthorDefault(){ const raw=(document.getElementById('pubAuthor').value||'').trim(); return raw||'Preston Diamond'; }
+function getTitleRequired(){ const t=(document.getElementById('pubTitle').value||'').trim(); return t; }
+document.getElementById('addCurrentToBuiltin')?.addEventListener('click',()=>{
+  const title=getTitleRequired(); if(!title) return alert('Enter a title first.');
+  const pack={version:1,board:[...board]};
+  BUILTIN_PACKS.push({title, author:getAuthorDefault(), pack});
+  alert('Added to built-in gallery. Press “Save Site (.html)” to make it permanent.');
+  renderBuiltinGallery();
 });
-document.getElementById('copyGalleryItem')?.addEventListener('click',async()=>{
-  const item=currentGalleryItem();
-  if(!item.title || !item.url){ alert('Title and Public Pack URL are required.'); return; }
-  const text=JSON.stringify(item,null,2);
-  try{ await navigator.clipboard.writeText(text); alert('Gallery item JSON copied!'); }catch{ alert('Could not copy.'); }
-});
-function restoreGalleryUrlToCreator(){
-  const v=localStorage.getItem(GALLERY_URL_KEY)||'';
-  document.getElementById('galleryUrl').value=v;
-}
-document.getElementById('saveGalleryUrl').onclick=()=>{
-  const v=(document.getElementById('galleryUrl').value||'').trim();
-  localStorage.setItem(GALLERY_URL_KEY,v);
-  alert('Saved Gallery Index URL. Discover will use this for everyone visiting this site.');
-  refreshPublicGallery();
-};
-document.getElementById('testLoadPub')?.addEventListener('click',async()=>{
-  const item=currentGalleryItem();
-  if(!item.url){ alert('Enter a Public Pack URL first.'); return; }
+document.getElementById('importLocalToBuiltin')?.addEventListener('change', async (e)=>{
+  const f=e.target.files?.[0]; if(!f) return;
   try{
-    const resp=await fetch(item.url,{cache:'no-store'});
-    if(!resp.ok) throw new Error('HTTP '+resp.status);
-    const data=await resp.json();
+    const txt=await f.text(); const data=JSON.parse(txt);
     if(!data?.board?.length) throw new Error('No board array');
-    board=data.board.map(x=>({id:x.id||crypto.randomUUID(),name:x.name||'',img:x.img||''}));
-    eliminated.clear();highlightedTile=null;renderList();renderCreatorGrid();renderGrid();
-    switchTab('play');
-    alert('Loaded! Looks good.');
-  }catch(e){ alert('Failed to load. Make sure the URL is public and CORS-enabled.'); }
-});
-document.getElementById('prepareUpdatedIndex')?.addEventListener('click', async ()=>{
-  const idxUrl=(document.getElementById('galleryUrl').value||'').trim();
-  if(!idxUrl){ return alert('Set a Gallery Index URL first.'); }
-  const item=currentGalleryItem();
-  if(!item.title || !item.url){ return alert('Fill out Title and Public Pack URL first.'); }
-  let arr=[];
-  try{
-    const r=await fetch(idxUrl,{cache:'no-store'});
-    if(r.ok){ arr=await r.json(); if(!Array.isArray(arr)) arr=[]; }
-  }catch{ /* ignore */ }
-  // de-dupe by URL
-  const existsIndex = arr.findIndex(x => (x?.url||'') === item.url);
-  if(existsIndex >= 0){ arr[existsIndex] = item; } else { arr.push(item); }
-  const blob=new Blob([JSON.stringify(arr,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='gallery-index.json';a.click();
-  alert('Downloaded updated Gallery Index. Upload it to your host to publish!');
+    const title=getTitleRequired(); if(!title) return alert('Enter a title first (then pick the file again).');
+    BUILTIN_PACKS.push({title, author:getAuthorDefault(), pack:data});
+    alert('Added to built-in gallery from file. Press “Save Site (.html)” to make it permanent.');
+    renderBuiltinGallery();
+  }catch{ alert('Invalid pack file.'); }
+  finally{ e.target.value=''; }
 });
 
-/* Discover: Import My Custom Pack (local) */
+/* Discover: Import to play (local only) */
 document.getElementById('importLocal')?.addEventListener('change', async (e)=>{
   const f=e.target.files?.[0];
   if(!f) return;
@@ -644,23 +601,31 @@ document.getElementById('addChar')?.addEventListener('click',()=>{
 document.getElementById('clearXs')?.addEventListener('click',()=>{eliminated.clear();renderGrid()});
 document.getElementById('shuffle')?.addEventListener('click',shuffle);
 
-/* Status chip for gallery URL (shows "Built-in" when using hard-coded list) */
-function updateGalleryChip(url){
-  const builtIn = !url || url === 'Built-in';
-  galleryChip.classList.toggle('ok', true);
-  galleryChip.classList.toggle('err', false);
-  galleryChip.innerHTML = builtIn
-    ? `<small>Gallery: <b>Built-in</b> (hard-coded)</small>`
-    : `<small>Gallery: <code style="font-family:monospace">${escapeHtml(url)}</code></small>`;
-}
-
-/* Utilities */
+/* Status chip text */
 function escapeHtml(str){return (str||'').replace(/[&<>"']/g,s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s]));}
 
+/* ===== Save Site (.html) — rewrites this file with updated built-ins ===== */
+downloadSiteBtn?.addEventListener('click', ()=>{
+  try{
+    const html = document.documentElement.outerHTML;
+    const serialized = JSON.stringify(BUILTIN_PACKS, null, 2);
+    const replaced = html.replace(/\/\*__PACKS__\*\/[\\s\\S]*?\/\*__END_PACKS__\*\//,
+      '/*__PACKS__*/\\n' + serialized + '\\n/*__END_PACKS__*/');
+    const blob = new Blob([replaced], {type:'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'guess-who-singlefile.html';
+    a.click();
+    alert('Downloaded updated site. Upload this HTML to Glitch to publish your new built-in gallery.');
+  }catch(e){
+    alert('Could not save site: ' + (e?.message||e));
+  }
+});
+
 /* Init */
-renderRoleUI();
-switchTab('play');renderCreatorGrid();renderGrid();refreshPublicGallery();restoreGalleryUrlToCreator();
-updateGalleryChip(localStorage.getItem(GALLERY_URL_KEY)||'Built-in');
+function setAdminUI(){/* chip text already static for built-in */}
+function initFromFirstPack(){ if(BUILTIN_PACKS[0]?.pack?.board?.length){ board = BUILTIN_PACKS[0].pack.board.map(x=>({id:x.id||crypto.randomUUID(),name:x.name||'',img:x.img||''})); } }
+renderRoleUI(); setAdminUI(); switchTab('play'); renderCreatorGrid(); renderGrid(); renderBuiltinGallery(); initFromFirstPack();
 </script>
 </body>
 </html>
