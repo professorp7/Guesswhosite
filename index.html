@@ -61,6 +61,11 @@ textarea{width:100%;min-height:84px;resize:vertical}
 .badge .dot{width:8px;height:8px;border-radius:50%;background:#98f5a6}
 .badge.admin .dot{background:#ffd166}
 .badge.normal .dot{background:#7aa8ff}
+
+/* Status chip */
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #2a3152;border-radius:999px;padding:6px 10px;background:#0b0e1a}
+.chip.ok{border-color:#315a2e}
+.chip.err{border-color:#5a2e31}
 </style>
 </head>
 <body>
@@ -71,6 +76,7 @@ textarea{width:100%;min-height:84px;resize:vertical}
   <div class="rolebar card">
     <div id="roleBadge" class="badge normal"><span class="dot"></span><b>Role:</b> <span id="roleText">Normal</span></div>
     <div class="row">
+      <div id="galleryChip" class="chip"><small>Gallery: not set</small></div>
       <button id="loginAdmin" class="secondary">Admin Login</button>
       <button id="logoutAdmin" class="secondary hidden">Logout</button>
     </div>
@@ -127,7 +133,7 @@ textarea{width:100%;min-height:84px;resize:vertical}
             <button id="saveGalleryUrl" class="secondary">Save</button>
             <button id="prepareUpdatedIndex" class="secondary">Prepare updated public index</button>
           </div>
-          <small>Everyone who visits will see packs from the <b>Gallery Index URL</b> in Discover.</small>
+          <small>Everyone will see packs from the <b>Gallery Index URL</b> in Discover.</small>
           <div style="margin-top:8px">
             <textarea id="pubPreview" readonly placeholder="Gallery item JSON appears here when fields are filled."></textarea>
           </div>
@@ -183,7 +189,7 @@ textarea{width:100%;min-height:84px;resize:vertical}
     </div>
   </section>
 
-  <footer class="section"><small>To make All Packs public, host your Pack JSONs and a shared Gallery Index JSON, then set the Gallery Index URL above.</small></footer>
+  <footer class="section"><small>Public packs: host Pack JSONs + a single Gallery Index JSON. Set the Gallery URL in Creator → Public Publish.</small></footer>
 </div>
 
 <!-- Spinner Modal -->
@@ -208,6 +214,7 @@ const creatorGrid=document.getElementById('creatorGrid');
 const pairs=document.getElementById('pairs');
 const imgFile=document.getElementById('imgFile');
 const fsBtn=document.getElementById('fullscreenBtn');
+const galleryChip=document.getElementById('galleryChip');
 
 /* ===== Role Handling ===== */
 let isAdmin = localStorage.getItem(ADMIN_KEY)==='1';
@@ -264,7 +271,7 @@ function renderList(){
       if(from===to)return;const item=board.splice(from,1)[0];board.splice(to,0,item);
       renderList();renderCreatorGrid();renderGrid();
     });
-    const img=document.createElement('img');img.src=c.img||'';
+    const img=document.createElement('img');img.src=c.img||'';img.alt=(c.name||'');
     img.style.width='40px';img.style.height='40px';img.style.objectFit='cover';img.style.borderRadius='8px';img.style.background='#0b0e1a';
     const name=document.createElement('div');name.textContent=c.name||'';
     const del=document.createElement('button');del.textContent='Delete';del.className='secondary';
@@ -276,7 +283,7 @@ function renderCreatorGrid(){
   creatorGrid.innerHTML='';
   board.forEach(c=>{
     const t=document.createElement('div');t.className='tile';t.dataset.id=c.id;
-    const img=document.createElement('img');if(c.img)img.src=c.img;t.appendChild(img);
+    const img=document.createElement('img');img.alt=(c.name||'');if(c.img)img.src=c.img;t.appendChild(img);
     creatorGrid.appendChild(t);
   });
 }
@@ -284,7 +291,7 @@ function renderGrid(){
   grid.innerHTML='';
   board.forEach(c=>{
     const t=document.createElement('div');t.className='tile'+(eliminated.has(c.id)?' eliminated':'');t.dataset.id=c.id;
-    const img=document.createElement('img');if(c.img)img.src=c.img;t.appendChild(img);
+    const img=document.createElement('img');img.alt=(c.name||'');if(c.img)img.src=c.img;t.appendChild(img);
     const x=document.createElement('div');x.className='x';x.textContent='X';t.appendChild(x);
     t.onclick=()=>{const id=c.id;if(eliminated.has(id))eliminated.delete(id);else eliminated.add(id);renderGrid()};
     grid.appendChild(t);
@@ -378,7 +385,7 @@ function drawWheel(){
     const mid=(start+end)/2,tx=cx+Math.cos(mid)*(r*0.65),ty=cy+Math.sin(mid)*(r*0.65);
     ctx.save();ctx.translate(tx,ty);ctx.rotate(mid+Math.PI/2);
     ctx.fillStyle='#e7edf6';ctx.font='bold 16px system-ui,Arial';ctx.textAlign='center';
-    ctx.fillText((board[i]?.name||'#'+(i+1)).slice(0,18),0,0);ctx.restore();
+    ctx.fillText((board[i]?.name||('#'+(i+1))).slice(0,18),0,0);ctx.restore();
   }
 }
 function spin(){
@@ -441,14 +448,18 @@ function renderPackRow(it, idx){
   const badge=document.createElement('div');badge.textContent=String(idx+1).padStart(2,'0');
   badge.style.minWidth='28px';badge.style.textAlign='center';badge.style.border='1px solid #2a3152';badge.style.borderRadius='8px';badge.style.padding='4px';
   const meta=document.createElement('div');
-  meta.innerHTML=`<b>${it.title||'Untitled'}</b><br><small>by ${it.author||'Unknown'}</small>`;
+  const safeTitle = (it.title||'Untitled');
+  const safeAuthor = (it.author||'Unknown');
+  const safeUrl = (it.url||'');
+  meta.innerHTML=`<b>${escapeHtml(safeTitle)}</b><br><small>by ${escapeHtml(safeAuthor)}</small>`;
   left.appendChild(badge);left.appendChild(meta);
+
   const actions=document.createElement('div');actions.className='row';actions.style.gap='6px';
 
   const loadBtn=document.createElement('button');loadBtn.textContent='Load';
   loadBtn.onclick=async()=>{
     try{
-      const resp=await fetch(it.url,{cache:'no-store'});
+      const resp=await fetch(safeUrl,{cache:'no-store'});
       if(!resp.ok) throw new Error('HTTP '+resp.status);
       const data=await resp.json();
       if(!data?.board?.length) throw new Error('No board array');
@@ -457,6 +468,13 @@ function renderPackRow(it, idx){
     }catch(e){ alert('Failed to load this item. Is the URL public and CORS-enabled?'); }
   };
   actions.appendChild(loadBtn);
+
+  if(isAdmin){
+    const removeBtn=document.createElement('button');removeBtn.textContent='Remove';
+    removeBtn.className='secondary';
+    removeBtn.onclick=()=>removeItemFromGallery(idx);
+    actions.appendChild(removeBtn);
+  }
 
   row.appendChild(left);row.appendChild(actions);
   return row;
@@ -475,13 +493,18 @@ function applySearch(){
 }
 async function refreshPublicGallery(){
   const url=localStorage.getItem(GALLERY_URL_KEY)||'';
+  updateGalleryChip(url);
   if(!url){ galleryItems=[]; filteredItems=[]; renderGallery([]); return; }
   try{
     const resp=await fetch(url,{cache:'no-store'});
     if(!resp.ok) throw new Error('HTTP '+resp.status);
     const items=await resp.json(); // array of {title, author, url}
     if(!Array.isArray(items)) throw new Error('Index must be an array');
-    galleryItems = items;
+    // Defensive: ensure each item has expected fields (avoid ghost entries)
+    galleryItems = items
+      .filter(Boolean)
+      .map(x => ({ title: (x.title||'').toString(), author: (x.author||'').toString(), url: (x.url||'').toString() }))
+      .filter(x => x.url); // require url
     applySearch();
   }catch(e){
     alert('Could not fetch gallery index. Make sure it’s a public JSON file with CORS.');
@@ -491,10 +514,23 @@ async function refreshPublicGallery(){
 document.getElementById('searchPacks').addEventListener('input',applySearch);
 document.getElementById('clearSearch').onclick=()=>{document.getElementById('searchPacks').value='';applySearch();};
 
+/* Remove item (Admin): download updated gallery without the item */
+function removeItemFromGallery(idx){
+  if(!isAdmin){ return alert('Admin only.'); }
+  const url=localStorage.getItem(GALLERY_URL_KEY)||'';
+  if(!url){ return alert('Set the Gallery Index URL in Creator first.'); }
+  const arr=[...galleryItems];
+  const removed=arr.splice(idx,1);
+  if(!removed.length){ return; }
+  const blob=new Blob([JSON.stringify(arr,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='gallery-index.json';a.click();
+  alert('Updated gallery-index.json downloaded without that item. Upload it to GitHub to publish the removal.');
+}
+
 /* Creator: Public Publish helpers */
 function currentGalleryItem(){
   const title=(document.getElementById('pubTitle').value||'').trim();
-  const author=(document.getElementById('pubAuthor').value||'').trim() || 'Admin';
+  const author=(document.getElementById('pubAuthor').value||'').trim();
   const url=(document.getElementById('pubUrl').value||'').trim();
   return { title, author, url };
 }
@@ -545,7 +581,9 @@ document.getElementById('prepareUpdatedIndex')?.addEventListener('click', async 
     const r=await fetch(idxUrl,{cache:'no-store'});
     if(r.ok){ arr=await r.json(); if(!Array.isArray(arr)) arr=[]; }
   }catch{ /* ignore */ }
-  if(!arr.find(x=>x.url===item.url)){ arr.push(item); }
+  // de-dupe by URL
+  const existsIndex = arr.findIndex(x => (x?.url||'') === item.url);
+  if(existsIndex >= 0){ arr[existsIndex] = item; } else { arr.push(item); }
   const blob=new Blob([JSON.stringify(arr,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='gallery-index.json';a.click();
   alert('Downloaded updated Gallery Index. Upload it to your host to publish!');
@@ -588,9 +626,23 @@ document.getElementById('addChar')?.addEventListener('click',()=>{
 document.getElementById('clearXs')?.addEventListener('click',()=>{eliminated.clear();renderGrid()});
 document.getElementById('shuffle')?.addEventListener('click',shuffle);
 
+/* Status chip for gallery URL */
+function updateGalleryChip(url){
+  const has=!!url;
+  galleryChip.classList.toggle('ok',has);
+  galleryChip.classList.toggle('err',!has);
+  galleryChip.innerHTML = has
+    ? `<small>Gallery: <code style="font-family:monospace">${escapeHtml(url)}</code></small>`
+    : `<small>Gallery: not set</small>`;
+}
+
+/* Utilities */
+function escapeHtml(str){return (str||'').replace(/[&<>"']/g,s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s]));}
+
 /* Init */
 renderRoleUI();
 switchTab('play');renderCreatorGrid();renderGrid();refreshPublicGallery();restoreGalleryUrlToCreator();
+updateGalleryChip(localStorage.getItem(GALLERY_URL_KEY)||'');
 </script>
 </body>
 </html>
