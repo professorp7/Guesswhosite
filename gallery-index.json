@@ -1,5 +1,7 @@
-{
-  "title": "pokemon",
-  "author": "The Admin",
-  "url": "https://raw.githubusercontent.com/professorp7/Guesswhosite/refs/heads/main/Pokemon%201-50.json"
-}
+[
+  {
+    "title": "pokemon",
+    "author": "The Admin",
+    "url": "https://professorp7.github.io/Guesswhosite/Pokemon-1-50.json"
+  }
+]
