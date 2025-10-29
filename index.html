@@ -1,596 +1,165 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Guess Who — Public All Packs</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guess Who - Public Admin Version</title>
 <style>
-:root{--bg:#0f1220;--card:#171a2b;--muted:#8ea0b6;--text:#e7edf6;--accent:#6ec3ff;--glow:#8fd3ff;--gap:16px}
-*{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,Arial,sans-serif;background:var(--bg);color:var(--text)}
-.container{max-width:1100px;margin:0 auto;padding:16px}
-.h{margin:6px 0 12px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.card{background:var(--card);border:1px solid #222640;border-radius:16px;padding:12px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
-button,input,select,textarea{padding:10px 12px;border-radius:12px;border:1px solid #243052;background:#0b0e1a;color:var(--text)}
-button{background:var(--accent);color:#04101a;font-weight:700;cursor:pointer}
-button.secondary{background:#0b0e1a;color:#e7edf6;border-color:#243052}
-small{color:var(--muted)}
-.hidden{display:none !important}
-textarea{width:100%;min-height:84px;resize:vertical}
-
-/* Tabs */
-.tabs{display:flex;gap:8px;position:sticky;top:0;background:linear-gradient(#0f1220, #0f1220f0);padding-bottom:8px;z-index:5}
-.tab{padding:10px 14px;border-radius:12px;border:1px solid #29406a;background:#0b0e1a;color:#cfe7ff;cursor:pointer}
-.tab.active{background:var(--accent);color:#04101a;border-color:#3f8bd6;font-weight:800}
-.section{margin-top:12px}
-
-/* Grid */
-.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:var(--gap)}
-.tile{border:1px solid #2a3152;border-radius:20px;overflow:hidden;user-select:none;transition:transform .1s ease, box-shadow .2s ease, border-color .2s ease;background:#0f1430;position:relative;aspect-ratio:1/1}
-.tile:hover{transform:translateY(-2px)}
-.tile img{width:100%;height:100%;object-fit:cover;object-position:center top}
-.tile .x{position:absolute;inset:0;display:none;place-items:center;font-size:42px;font-weight:900;background:rgba(0,0,0,.55)}
-.tile.eliminated .x{display:grid}
-.tile.highlight{box-shadow:0 0 0 3px var(--glow), 0 0 22px var(--glow);border-color:var(--glow);animation:pulse 1s ease-in-out infinite alternate}
-@keyframes pulse{0%{box-shadow:0 0 0 3px var(--glow),0 0 10px var(--glow)}100%{box-shadow:0 0 0 5px var(--glow),0 0 30px var(--glow)}}
-
-/* Builder */
-.builder label{display:block;margin-top:8px}
-.builder .pair{display:grid;grid-template-columns:1fr 1fr auto;gap:8px}
-.list{max-height:220px;overflow:auto;border:1px dashed #2a3152;border-radius:12px;padding:8px}
-.preview{display:flex;align-items:center;gap:8px;margin-top:6px}
-.preview img{width:48px;height:48px;border-radius:10px;object-fit:cover;background:#0b0e1a;border:1px solid #2a3152}
-.preview .ok{color:#9ff89f}
-
-/* Layout helpers */
-.flex{display:flex;align-items:center;gap:8px}
-.split{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
-@media(max-width:900px){.split{grid-template-columns:1fr}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-
-/* Spinner modal */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:50}
-.modal .inner{background:var(--card);border:1px solid #324066;border-radius:18px;padding:16px;max-width:90vw}
-#spinCanvas{width:60vmin;height:60vmin;display:block}
-.spinner-row{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:8px}
-.arrow{width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:18px solid var(--accent);margin:0 auto}
-
-/* Role bar */
-.rolebar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-.badge{display:inline-flex;align-items:center;gap:6px;border:1px solid #2a3152;border-radius:999px;padding:6px 10px;background:#0b0e1a}
-.badge b{letter-spacing:.2px}
-.badge .dot{width:8px;height:8px;border-radius:50%;background:#98f5a6}
-.badge.admin .dot{background:#ffd166}
-.badge.normal .dot{background:#7aa8ff}
+  body { font-family: Arial, sans-serif; background: #f3f3f3; margin: 0; }
+  header { background: #333; color: white; padding: 10px 20px; }
+  h1 { margin: 0; }
+  #tabs button { padding: 10px; margin-right: 5px; cursor: pointer; }
+  #tabs button.active { background-color: #333; color: #fff; }
+  section { display: none; padding: 20px; }
+  section.active { display: block; }
+  .pack { background: white; border-radius: 8px; padding: 10px; margin: 10px 0; }
+  input, textarea { width: 100%; margin-top: 5px; padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+  button { border: none; background: #444; color: white; border-radius: 5px; padding: 8px 12px; margin-top: 8px; cursor: pointer; }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1 class="h">Guess Who — Public All Packs</h1>
+<header>
+  <h1>Guess Who - Public Admin</h1>
+  <div id="role">Role: Normal</div>
+  <button id="adminLoginBtn">Admin Login</button>
+  <button id="adminLogoutBtn" style="display:none;">Logout</button>
+</header>
 
-  <!-- ROLE BAR -->
-  <div class="rolebar card">
-    <div id="roleBadge" class="badge normal"><span class="dot"></span><b>Role:</b> <span id="roleText">Normal</span></div>
-    <div class="row">
-      <button id="loginAdmin" class="secondary">Admin Login</button>
-      <button id="logoutAdmin" class="secondary hidden">Logout</button>
-    </div>
-  </div>
-
-  <div class="tabs">
-    <button class="tab" data-tab="creator" id="creatorTab">Creator</button>
-    <button class="tab active" data-tab="play">Play</button>
-    <button class="tab" data-tab="browse" id="browseTab">Discover</button>
-  </div>
-
-  <!-- CREATOR TAB (Admin only) -->
-  <section id="creator" class="section hidden">
-    <div class="split">
-      <div class="card builder">
-        <h2 class="h">Create a Board</h2>
-        <div class="row">
-          <button id="newBoard">New board</button>
-          <button id="downloadBoard" class="secondary">Download (.json)</button>
-          <label class="secondary" for="uploadBoard" style="padding:10px 12px;border-radius:12px;border:1px solid #243052;cursor:pointer">Upload pack (.json)<input id="uploadBoard" type="file" accept="application/json" style="display:none"></label>
-          <button id="demoBoard" class="secondary">Load demo</button>
-        </div>
-
-        <label style="margin-top:10px">Add character (name optional) + image</label>
-        <div id="pairs" class="list"></div>
-        <div class="pair" style="margin-top:8px">
-          <input id="nameInput" type="text" placeholder="Character name (optional)" maxlength="60">
-          <input id="imgInput" type="text" placeholder="Image URL (optional)">
-          <button id="addChar">Add</button>
-        </div>
-        <div class="row" style="margin-top:8px">
-          <label id="pickLabel" class="secondary" for="imgFile" style="padding:10px 12px;border-radius:12px;border:1px solid #243052;cursor:pointer">…or pick an image file<input id="imgFile" type="file" accept="image/*" style="display:none"></label>
-          <small>Picked files are embedded as Data URLs so exports still work offline.</small>
-        </div>
-        <div class="preview" id="imgPreviewWrap" style="display:none">
-          <img id="imgPreview" alt="preview">
-          <small class="ok">Ready to add ✓</small>
-        </div>
-
-        <!-- Slim Public Publish -->
-        <div class="card" style="margin-top:12px">
-          <h3 class="h">Public Publish (Admin)</h3>
-          <div class="row">
-            <input id="pubTitle" placeholder="Pack title (required)" style="flex:1">
-            <input id="pubAuthor" placeholder="Author (optional)" style="flex:.6">
-          </div>
-          <div class="row" style="margin-top:8px">
-            <input id="pubUrl" placeholder="Public Pack JSON URL (required)" style="flex:1">
-            <button id="testLoadPub" class="secondary">Test load</button>
-            <button id="copyGalleryItem">Copy gallery item JSON</button>
-          </div>
-          <div class="row" style="margin-top:8px">
-            <input id="galleryUrl" placeholder="Gallery Index URL (shared public JSON)" style="flex:1">
-            <button id="saveGalleryUrl" class="secondary">Save</button>
-            <button id="prepareUpdatedIndex" class="secondary">Prepare updated public index</button>
-          </div>
-          <small>Everyone who visits will see packs from the <b>Gallery Index URL</b> in Discover.</small>
-          <div style="margin-top:8px">
-            <textarea id="pubPreview" readonly placeholder="Gallery item JSON appears here when fields are filled."></textarea>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2 class="h">Board Preview</h2>
-        <div id="creatorGrid" class="grid"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- PLAY TAB -->
-  <section id="play" class="section">
-    <div class="card">
-      <h2 class="h">Playboard</h2>
-      <div class="flex" style="justify-content:space-between">
-        <div class="flex">
-          <button id="clearXs" class="secondary">Clear X's</button>
-          <button id="shuffle" class="secondary">Shuffle</button>
-          <button id="fullscreenBtn" class="secondary">Fullscreen</button>
-          <button id="copyShareLink2" class="secondary">Copy share link</button>
-        </div>
-        <div class="flex">
-          <button id="openSpinner">🎯 Spin for Character</button>
-        </div>
-      </div>
-      <div id="gridWrap" class="card" style="padding:12px">
-        <div id="grid" class="grid"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- DISCOVER TAB (pulls from PUBLIC index URL) -->
-  <section id="browse" class="section hidden">
-    <div class="card">
-      <h2 class="h">All Packs</h2>
-      <div class="row" style="margin-bottom:8px">
-        <input id="searchPacks" type="text" placeholder="Search packs by title or author…" style="flex:1">
-        <button id="clearSearch" class="secondary">Clear</button>
-      </div>
-      <div id="galleryList" class="list"></div>
-      <small>Lists packs from your shared Gallery Index URL.</small>
-    </div>
-
-    <div class="card" style="margin-top:12px">
-      <h3 class="h">Import My Custom Pack (local)</h3>
-      <div class="row">
-        <label class="secondary" for="importLocal" style="padding:10px 12px;border-radius:12px;border:1px solid #243052;cursor:pointer">Choose pack (.json)<input id="importLocal" type="file" accept="application/json" style="display:none"></label>
-        <small>Loads your pack into Play immediately. It does <b>not</b> get added to All Packs.</small>
-      </div>
-    </div>
-  </section>
-
-  <footer class="section"><small>To make All Packs public, host your Pack JSONs and a shared Gallery Index JSON, then set the Gallery Index URL above.</small></footer>
+<div id="tabs">
+  <button data-tab="play" class="active">Play</button>
+  <button data-tab="discover">Discover</button>
+  <button data-tab="creator" style="display:none;">Creator</button>
 </div>
 
-<!-- Spinner Modal -->
-<div id="spinnerModal" class="modal">
-  <div class="inner">
-    <div class="arrow"></div>
-    <canvas id="spinCanvas" width="600" height="600"></canvas>
-    <div class="spinner-row"><button id="spinBtn">Spin</button><button id="closeSpin" class="secondary">Close</button></div>
-  </div>
-</div>
+<section id="play" class="active">
+  <h2>Play Board</h2>
+  <p>Here’s where players can play the game.</p>
+</section>
+
+<section id="discover">
+  <h2>All Packs (Public)</h2>
+  <input id="searchPacks" placeholder="Search Packs...">
+  <div id="packsList"></div>
+  <hr>
+  <h3>Import My Custom Pack</h3>
+  <input type="file" id="importPack" accept=".json">
+</section>
+
+<section id="creator">
+  <h2>Create Board</h2>
+  <textarea id="packData" placeholder="Enter or paste JSON here..."></textarea>
+  <input id="packTitle" placeholder="Pack Title">
+  <input id="packAuthor" placeholder="Author">
+  <input id="packURL" placeholder="Public Pack JSON URL">
+  <h3>Public Publish</h3>
+  <input id="galleryURL" placeholder="Gallery Index URL">
+  <button id="saveGalleryURL">Save Gallery URL</button>
+  <button id="prepareIndex">Prepare Updated Public Index</button>
+</section>
 
 <script>
-/* ===== Shared State ===== */
-let board=[],eliminated=new Set(),highlightedTile=null,lastEmbeddedDataURL='';
-const ADMIN_KEY='gw_is_admin';
-const GALLERY_URL_KEY='gw_public_gallery_url';
-const GAP=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--gap'))||16;
+const adminCode = "taylor swift";
+let isAdmin = false;
+const galleryKey = "galleryIndexURL";
 
-/* Elements */
-const grid=document.getElementById('grid');
-const creatorGrid=document.getElementById('creatorGrid');
-const pairs=document.getElementById('pairs');
-const imgFile=document.getElementById('imgFile');
-const fsBtn=document.getElementById('fullscreenBtn');
+const roleDiv = document.getElementById("role");
+const loginBtn = document.getElementById("adminLoginBtn");
+const logoutBtn = document.getElementById("adminLogoutBtn");
+const creatorTab = document.querySelector('button[data-tab="creator"]');
 
-/* ===== Role Handling ===== */
-let isAdmin = localStorage.getItem(ADMIN_KEY)==='1';
-const roleText=document.getElementById('roleText');
-const roleBadge=document.getElementById('roleBadge');
-const loginBtn=document.getElementById('loginAdmin');
-const logoutBtn=document.getElementById('logoutAdmin');
-const creatorTab=document.getElementById('creatorTab');
-
-function renderRoleUI(){
-  roleText.textContent = isAdmin ? 'Admin' : 'Normal';
-  roleBadge.classList.toggle('admin', isAdmin);
-  roleBadge.classList.toggle('normal', !isAdmin);
-  loginBtn.classList.toggle('hidden', isAdmin);
-  logoutBtn.classList.toggle('hidden', !isAdmin);
-  creatorTab.style.display = isAdmin ? '' : 'none';
-  const activeTab=document.querySelector('.tab.active')?.dataset?.tab;
-  if(!isAdmin && activeTab==='creator'){ switchTab('play'); }
-}
-loginBtn.onclick=()=>{
-  const code = prompt('Enter the secret admin code:');
-  if(!code) return;
-  if(/taylor\s*swift/i.test(code.trim())){
-    isAdmin=true; localStorage.setItem(ADMIN_KEY,'1'); renderRoleUI(); alert('Admin unlocked!');
-  }else{ alert('Wrong code.'); }
-};
-logoutBtn.onclick=()=>{
-  isAdmin=false; localStorage.removeItem(ADMIN_KEY); renderRoleUI(); alert('Logged out. Back to Normal.');
+loginBtn.onclick = () => {
+  const code = prompt("Enter admin code:");
+  if (code && code.toLowerCase() === adminCode) {
+    isAdmin = true;
+    roleDiv.textContent = "Role: Admin";
+    creatorTab.style.display = "inline-block";
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+  } else {
+    alert("Incorrect code.");
+  }
 };
 
-/* ===== Tabs ===== */
-const tabs=[...document.querySelectorAll('.tab')];
-const sections={creator:document.getElementById('creator'),play:document.getElementById('play'),browse:document.getElementById('browse')};
-function switchTab(id){
-  if(id==='creator' && !isAdmin){ alert('Creator is for Admin only.'); id='play'; }
-  tabs.forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
-  Object.keys(sections).forEach(k=>sections[k].classList.toggle('hidden',k!==id));
-  if(id==='play'){renderGrid();}
-  if(id==='creator'){renderCreatorGrid();restoreGalleryUrlToCreator();}
-  if(id==='browse'){refreshPublicGallery();}
-}
-tabs.forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+logoutBtn.onclick = () => {
+  isAdmin = false;
+  roleDiv.textContent = "Role: Normal";
+  creatorTab.style.display = "none";
+  logoutBtn.style.display = "none";
+  loginBtn.style.display = "inline-block";
+};
 
-/* ===== Builder: list + grids ===== */
-function renderList(){
-  pairs.innerHTML='';
-  board.forEach((c,i)=>{
-    const row=document.createElement('div');row.className='row';row.style.alignItems='center';row.style.margin='4px 0';row.draggable=true;row.dataset.index=i;
-    row.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',i)});
-    row.addEventListener('dragover',e=>e.preventDefault());
-    row.addEventListener('drop',e=>{
-      e.preventDefault();
-      const from=+e.dataTransfer.getData('text/plain');const to=+row.dataset.index;
-      if(from===to)return;const item=board.splice(from,1)[0];board.splice(to,0,item);
-      renderList();renderCreatorGrid();renderGrid();
-    });
-    const img=document.createElement('img');img.src=c.img||'';
-    img.style.width='40px';img.style.height='40px';img.style.objectFit='cover';img.style.borderRadius='8px';img.style.background='#0b0e1a';
-    const name=document.createElement('div');name.textContent=c.name||'';
-    const del=document.createElement('button');del.textContent='Delete';del.className='secondary';
-    del.onclick=()=>{board.splice(i,1);eliminated.delete(c.id);renderList();renderCreatorGrid();renderGrid()};
-    row.appendChild(img);row.appendChild(name);row.appendChild(del);pairs.appendChild(row);
+document.querySelectorAll('#tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+const packsList = document.getElementById("packsList");
+const searchInput = document.getElementById("searchPacks");
+
+async function loadGallery() {
+  const url = localStorage.getItem(galleryKey);
+  if (!url) { packsList.innerHTML = "<p>No gallery index URL set (admin must set one).</p>"; return; }
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    displayPacks(data);
+  } catch {
+    packsList.innerHTML = "<p>Failed to load public packs. Check gallery URL or CORS.</p>";
+  }
+}
+
+function displayPacks(packs) {
+  const q = searchInput.value.toLowerCase();
+  packsList.innerHTML = "";
+  packs.filter(p => !q || p.title.toLowerCase().includes(q))
+       .forEach(p => {
+    const div = document.createElement("div");
+    div.className = "pack";
+    div.innerHTML = `<strong>${p.title}</strong><br>by ${p.author}<br>
+      <button onclick="window.open('${p.url}','_blank')">Open</button>`;
+    packsList.appendChild(div);
   });
 }
-function renderCreatorGrid(){
-  creatorGrid.innerHTML='';
-  board.forEach(c=>{
-    const t=document.createElement('div');t.className='tile';t.dataset.id=c.id;
-    const img=document.createElement('img');if(c.img)img.src=c.img;t.appendChild(img);
-    creatorGrid.appendChild(t);
-  });
-}
-function renderGrid(){
-  grid.innerHTML='';
-  board.forEach(c=>{
-    const t=document.createElement('div');t.className='tile'+(eliminated.has(c.id)?' eliminated':'');t.dataset.id=c.id;
-    const img=document.createElement('img');if(c.img)img.src=c.img;t.appendChild(img);
-    const x=document.createElement('div');x.className='x';x.textContent='X';t.appendChild(x);
-    t.onclick=()=>{const id=c.id;if(eliminated.has(id))eliminated.delete(id);else eliminated.add(id);renderGrid()};
-    grid.appendChild(t);
-  });
-  if(highlightedTile){const node=[...grid.children].find(el=>el.dataset.id===highlightedTile);if(node)node.classList.add('highlight');}
-  if(document.fullscreenElement===document.getElementById('gridWrap')) autoSizeFullscreen();
-}
-function newBoard(){board=[];eliminated.clear();highlightedTile=null;renderList();renderCreatorGrid();renderGrid()}
-function addChar(name,img){
-  const nm=(name||'').trim();
-  const im=(lastEmbeddedDataURL || img || '').trim();
-  if(!nm && !im){ alert('Add at least a name or an image.'); return; }
-  let autoName=nm; if(!autoName){
-    try{ autoName = im ? im.split('?')[0].split('#')[0].split('/').pop().split('\\').pop().replace(/\.[a-z0-9]+$/i,'') : ''; }catch{ autoName=''; }
-    if(!autoName) autoName = 'Character '+(board.length+1);
+
+searchInput.addEventListener("input", loadGallery);
+
+document.getElementById("saveGalleryURL").onclick = () => {
+  const url = document.getElementById("galleryURL").value.trim();
+  if (url) {
+    localStorage.setItem(galleryKey, url);
+    alert("Gallery Index URL saved!");
   }
-  const id='char-'+Math.random().toString(36).slice(2,10);
-  board.push({ id, name:autoName, img:im });
-  lastEmbeddedDataURL=''; document.getElementById('imgPreviewWrap').style.display='none';
-  renderList(); renderCreatorGrid(); renderGrid();
-}
-
-/* Download/Upload */
-function downloadBoard(){
-  const blob=new Blob([JSON.stringify({version:1,board},null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='guess-who-board.json';a.click()
-}
-function uploadBoard(file){
-  const r=new FileReader();
-  r.onload=()=>{
-    try{
-      const data=JSON.parse(r.result);
-      if(!data.board)throw 0;
-      board=data.board.map(x=>({id:x.id||crypto.randomUUID(),name:x.name||'',img:x.img||''}));
-      eliminated.clear();highlightedTile=null;renderList();renderCreatorGrid();renderGrid();
-      switchTab('play');
-    }catch{alert('Bad file')}
-  };
-  r.readAsText(file)
-}
-function shuffle(){for(let i=board.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[board[i],board[j]]=[board[j],board[i]];}renderList();renderCreatorGrid();renderGrid()}
-
-/* File picker: embed and preview */
-imgFile?.addEventListener('change',e=>{
-  const f=e.target.files?.[0];if(!f)return;
-  const rdr=new FileReader();
-  rdr.onload=()=>{
-    lastEmbeddedDataURL=rdr.result;
-    const wrap=document.getElementById('imgPreviewWrap');
-    const prev=document.getElementById('imgPreview');prev.src=lastEmbeddedDataURL;wrap.style.display='flex';
-  };
-  rdr.readAsDataURL(f)
-});
-
-/* Fullscreen + auto-size */
-fsBtn.onclick=async()=>{
-  const wrap=document.getElementById('gridWrap');
-  if(!document.fullscreenElement){await wrap.requestFullscreen?.();fsBtn.textContent='Exit Fullscreen';setTimeout(autoSizeFullscreen,10);}
-  else{await document.exitFullscreen?.();fsBtn.textContent='Fullscreen';resetGridSizing();}
 };
-window.addEventListener('resize',()=>{if(document.fullscreenElement===document.getElementById('gridWrap')) autoSizeFullscreen()});
-document.addEventListener('fullscreenchange',()=>{
-  if(document.fullscreenElement===document.getElementById('gridWrap')){fsBtn.textContent='Exit Fullscreen';autoSizeFullscreen();}
-  else{fsBtn.textContent='Fullscreen';resetGridSizing();}
-});
-function resetGridSizing(){grid.style.gridTemplateColumns='repeat(5,minmax(0,1fr))';[...grid.children].forEach(t=>{t.style.width='';t.style.height='';});}
-function autoSizeFullscreen(){
-  const wrap=document.getElementById('gridWrap');const N=board.length||1;const W=wrap.clientWidth-24;const H=wrap.clientHeight-24;if(W<=0||H<=0)return;
-  let best={size:0,cols:1,rows:N};
-  for(let cols=1;cols<=N;cols++){
-    const size=Math.floor((W-(cols-1)*GAP)/cols);if(size<=0)break;
-    const rows=Math.ceil(N/cols);const totalH=rows*size+(rows-1)*GAP;
-    if(totalH<=H&&size>best.size){best={size,cols,rows}}
+
+document.getElementById("prepareIndex").onclick = async () => {
+  const url = localStorage.getItem(galleryKey);
+  if (!url) return alert("Set the gallery index URL first.");
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const newPack = {
+      title: document.getElementById("packTitle").value,
+      author: document.getElementById("packAuthor").value,
+      url: document.getElementById("packURL").value
+    };
+    const exists = data.find(p => p.url === newPack.url);
+    if (!exists) data.push(newPack);
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "gallery-index.json";
+    a.click();
+  } catch {
+    alert("Could not fetch or update gallery index.");
   }
-  if(best.size===0){const rows=Math.ceil(Math.sqrt(N*H/W));const size=Math.floor((H-(rows-1)*GAP)/rows);const cols=Math.ceil(N/rows);best={size,cols,rows}}
-  grid.style.gridTemplateColumns=`repeat(${best.cols}, ${best.size}px)`;[...grid.children].forEach(t=>{t.style.width=best.size+'px';t.style.height=best.size+'px';});
-}
-
-/* Spinner Wheel */
-const modal=document.getElementById('spinnerModal');const openSpinner=document.getElementById('openSpinner');const spinCanvas=document.getElementById('spinCanvas');const spinBtn=document.getElementById('spinBtn');const ctx=spinCanvas.getContext('2d');
-let spinning=false,angle=0,targetAngle=0;
-openSpinner.onclick=()=>{modal.style.display='grid';drawWheel()};document.getElementById('closeSpin').onclick=()=>{modal.style.display='none'};
-function drawWheel(){
-  const W=spinCanvas.width,H=spinCanvas.height,cx=W/2,cy=H/2,r=Math.min(cx,cy)-8;
-  ctx.clearRect(0,0,W,H);
-  const n=board.length||1,slice=2*Math.PI/n;
-  for(let i=0;i<n;i++){
-    const start=angle+i*slice,end=start+slice;
-    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,end);ctx.closePath();
-    ctx.fillStyle=i%2?'#223154':'#10213b';ctx.fill();ctx.strokeStyle='#2e4878';ctx.lineWidth=2;ctx.stroke();
-    const mid=(start+end)/2,tx=cx+Math.cos(mid)*(r*0.65),ty=cy+Math.sin(mid)*(r*0.65);
-    ctx.save();ctx.translate(tx,ty);ctx.rotate(mid+Math.PI/2);
-    ctx.fillStyle='#e7edf6';ctx.font='bold 16px system-ui,Arial';ctx.textAlign='center';
-    ctx.fillText((board[i]?.name||'#'+(i+1)).slice(0,18),0,0);ctx.restore();
-  }
-}
-function spin(){
-  if(!board.length||spinning)return;spinning=true;
-  const n=board.length,slice=2*Math.PI/n;const choice=Math.floor(Math.random()*n);
-  targetAngle=Math.PI*2*3+(Math.PI*1.5)-(choice*slice+slice/2);
-  const start=performance.now(),dur=2200+Math.random()*800;
-  (function anim(t){
-    const k=Math.min(1,(t-start)/dur),ease=1-Math.pow(1-k,3);angle=targetAngle*ease;drawWheel();
-    if(k<1)requestAnimationFrame(anim);else{spinning=false;onPick(choice);}
-  })(start);
-}spinBtn.onclick=spin;
-function onPick(idx){
-  modal.style.display='none';
-  const chosen=board[idx];if(!chosen)return;
-  if(highlightedTile){const prev=[...grid.children].find(el=>el.dataset.id===highlightedTile);if(prev)prev.classList.remove('highlight');}
-  highlightedTile=chosen.id;
-  const node=[...grid.children].find(el=>el.dataset.id===highlightedTile);
-  if(node){node.classList.add('highlight');node.scrollIntoView({behavior:'smooth',block:'center'});}
-}
-
-/* Share Link (URL hash) */
-function encodeBoardToHash(obj){
-  const json=JSON.stringify(obj);
-  const b64=btoa(unescape(encodeURIComponent(json)));
-  return '#share='+b64;
-}
-function decodeBoardFromHash(hash){
-  try{
-    const m=/(#|&)share=([^&]+)/.exec(hash||'');
-    if(!m) return null;
-    const json=decodeURIComponent(escape(atob(m[2])));
-    return JSON.parse(json);
-  }catch{return null;}
-}
-async function copyShareLink(){
-  const payload={version:1,board};
-  const link=location.origin+location.pathname+encodeBoardToHash(payload);
-  await navigator.clipboard.writeText(link);
-  alert('Share link copied!');
-}
-document.getElementById('copyShareLink2')?.addEventListener('click',copyShareLink);
-
-/* Load from hash on open */
-(function tryLoadFromHash(){
-  const data=decodeBoardFromHash(location.hash);
-  if(data?.board?.length){
-    board=data.board.map(x=>({id:x.id||crypto.randomUUID(),name:x.name||'',img:x.img||''}));
-    eliminated.clear();highlightedTile=null;renderList();renderCreatorGrid();renderGrid();
-  }
-})();
-
-/* ===== Discover: PUBLIC Gallery Index ===== */
-const galleryList=document.getElementById('galleryList');
-let galleryItems=[],filteredItems=[];
-
-function renderPackRow(it, idx){
-  const row=document.createElement('div');row.className='row';row.style.alignItems='center';row.style.justifyContent='space-between';row.style.margin='6px 0';
-  const left=document.createElement('div');left.style.display='flex';left.style.alignItems='center';left.style.gap='8px';
-  const badge=document.createElement('div');badge.textContent=String(idx+1).padStart(2,'0');
-  badge.style.minWidth='28px';badge.style.textAlign='center';badge.style.border='1px solid #2a3152';badge.style.borderRadius='8px';badge.style.padding='4px';
-  const meta=document.createElement('div');
-  meta.innerHTML=`<b>${it.title||'Untitled'}</b><br><small>by ${it.author||'Unknown'}</small>`;
-  left.appendChild(badge);left.appendChild(meta);
-  const actions=document.createElement('div');actions.className='row';actions.style.gap='6px';
-
-  const loadBtn=document.createElement('button');loadBtn.textContent='Load';
-  loadBtn.onclick=async()=>{
-    try{
-      const resp=await fetch(it.url,{cache:'no-store'});
-      if(!resp.ok) throw new Error('HTTP '+resp.status);
-      const data=await resp.json();
-      if(!data?.board?.length) throw new Error('No board array');
-      board=data.board.map(x=>({id:x.id||crypto.randomUUID(),name:x.name||'',img:x.img||''}));
-      eliminated.clear();highlightedTile=null;renderList();renderCreatorGrid();renderGrid();switchTab('play');
-    }catch(e){ alert('Failed to load this item. Is the URL public and CORS-enabled?'); }
-  };
-  actions.appendChild(loadBtn);
-
-  row.appendChild(left);row.appendChild(actions);
-  return row;
-}
-
-function renderGallery(items){
-  galleryList.innerHTML='';
-  if(!items.length){galleryList.innerHTML='<small>No packs found.</small>';return;}
-  items.forEach((it,i)=>galleryList.appendChild(renderPackRow(it,i)));
-}
-function applySearch(){
-  const q=(document.getElementById('searchPacks').value||'').toLowerCase().trim();
-  filteredItems = !q ? [...galleryItems] :
-    galleryItems.filter(it => (it.title||'').toLowerCase().includes(q) || (it.author||'').toLowerCase().includes(q));
-  renderGallery(filteredItems);
-}
-async function refreshPublicGallery(){
-  const url=localStorage.getItem(GALLERY_URL_KEY)||'';
-  if(!url){ galleryItems=[]; filteredItems=[]; renderGallery([]); return; }
-  try{
-    const resp=await fetch(url,{cache:'no-store'});
-    if(!resp.ok) throw new Error('HTTP '+resp.status);
-    const items=await resp.json(); // array of {title, author, url}
-    if(!Array.isArray(items)) throw new Error('Index must be an array');
-    galleryItems = items;
-    applySearch();
-  }catch(e){
-    alert('Could not fetch gallery index. Make sure it’s a public JSON file with CORS.');
-    galleryItems=[]; filteredItems=[]; renderGallery([]);
-  }
-}
-document.getElementById('searchPacks').addEventListener('input',applySearch);
-document.getElementById('clearSearch').onclick=()=>{document.getElementById('searchPacks').value='';applySearch();};
-
-/* Creator: Public Publish helpers */
-function currentGalleryItem(){
-  const title=(document.getElementById('pubTitle').value||'').trim();
-  const author=(document.getElementById('pubAuthor').value||'').trim() || 'Admin';
-  const url=(document.getElementById('pubUrl').value||'').trim();
-  return { title, author, url };
-}
-function updatePubPreview(){
-  const item=currentGalleryItem();
-  document.getElementById('pubPreview').value = JSON.stringify(item, null, 2);
-}
-['pubTitle','pubAuthor','pubUrl'].forEach(id=>{
-  const el=document.getElementById(id); el?.addEventListener('input',updatePubPreview);
-});
-document.getElementById('copyGalleryItem')?.addEventListener('click',async()=>{
-  const item=currentGalleryItem();
-  if(!item.title || !item.url){ alert('Title and Public Pack URL are required.'); return; }
-  const text=JSON.stringify(item,null,2);
-  try{ await navigator.clipboard.writeText(text); alert('Gallery item JSON copied!'); }catch{ alert('Could not copy.'); }
-});
-function restoreGalleryUrlToCreator(){
-  const v=localStorage.getItem(GALLERY_URL_KEY)||'';
-  document.getElementById('galleryUrl').value=v;
-}
-document.getElementById('saveGalleryUrl').onclick=()=>{
-  const v=(document.getElementById('galleryUrl').value||'').trim();
-  localStorage.setItem(GALLERY_URL_KEY,v);
-  alert('Saved Gallery Index URL. Discover will use this for everyone visiting this site.');
-  refreshPublicGallery();
 };
-document.getElementById('testLoadPub')?.addEventListener('click',async()=>{
-  const item=currentGalleryItem();
-  if(!item.url){ alert('Enter a Public Pack URL first.'); return; }
-  try{
-    const resp=await fetch(item.url,{cache:'no-store'});
-    if(!resp.ok) throw new Error('HTTP '+resp.status);
-    const data=await resp.json();
-    if(!data?.board?.length) throw new Error('No board array');
-    board=data.board.map(x=>({id:x.id||crypto.randomUUID(),name:x.name||'',img:x.img||''}));
-    eliminated.clear();highlightedTile=null;renderList();renderCreatorGrid();renderGrid();
-    switchTab('play');
-    alert('Loaded! Looks good.');
-  }catch(e){ alert('Failed to load. Make sure the URL is public and CORS-enabled.'); }
-});
-document.getElementById('prepareUpdatedIndex')?.addEventListener('click', async ()=>{
-  const idxUrl=(document.getElementById('galleryUrl').value||'').trim();
-  if(!idxUrl){ return alert('Set a Gallery Index URL first.'); }
-  const item=currentGalleryItem();
-  if(!item.title || !item.url){ return alert('Fill out Title and Public Pack URL first.'); }
-  let arr=[];
-  try{
-    const r=await fetch(idxUrl,{cache:'no-store'});
-    if(r.ok){ arr=await r.json(); if(!Array.isArray(arr)) arr=[]; }
-  }catch{ /* ignore */ }
-  if(!arr.find(x=>x.url===item.url)){ arr.push(item); }
-  const blob=new Blob([JSON.stringify(arr,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='gallery-index.json';a.click();
-  alert('Downloaded updated Gallery Index. Upload it to your host to publish!');
-});
 
-/* Discover: Import My Custom Pack (local) */
-document.getElementById('importLocal')?.addEventListener('change', async (e)=>{
-  const f=e.target.files?.[0];
-  if(!f) return;
-  try{
-    const txt=await f.text();
-    const data=JSON.parse(txt);
-    if(!data?.board?.length) throw new Error('No board array');
-    board=data.board.map(x=>({id:x.id||crypto.randomUUID(),name:x.name||'',img:x.img||''}));
-    eliminated.clear();highlightedTile=null;renderList();renderCreatorGrid();renderGrid();
-    switchTab('play');
-  }catch(err){
-    alert('Could not read that file. Is it a valid pack JSON with a "board" array?');
-  }finally{
-    e.target.value='';
-  }
-});
-
-/* Wire controls */
-document.getElementById('newBoard')?.addEventListener('click',newBoard);
-document.getElementById('downloadBoard')?.addEventListener('click',downloadBoard);
-document.getElementById('demoBoard')?.addEventListener('click',()=>{
-  board=[
-    {name:'Freddy Fazbear',img:''},{name:'Chica',img:''},{name:'Bonnie',img:''},{name:'Foxy',img:''},
-    {name:'Golden Freddy',img:''},{name:'Toy Bonnie',img:''},{name:'Toy Freddy',img:''},{name:'Toy Chica',img:''},
-    {name:'Springtrap',img:''},{name:'Puppet',img:''},{name:'Withered Bonnie',img:''},{name:'Withered Chica',img:''}
-  ].map(c=>({id:crypto.randomUUID(),...c}));
-  eliminated.clear();highlightedTile=null;renderList();renderCreatorGrid();renderGrid();switchTab('play');
-});
-document.getElementById('uploadBoard')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(f)uploadBoard(f);e.target.value=''});
-document.getElementById('addChar')?.addEventListener('click',()=>{
-  const nm=document.getElementById('nameInput');const im=document.getElementById('imgInput');
-  addChar(nm.value,im.value);nm.value='';im.value='';nm.focus()
-});
-document.getElementById('clearXs')?.addEventListener('click',()=>{eliminated.clear();renderGrid()});
-document.getElementById('shuffle')?.addEventListener('click',shuffle);
-
-/* Init */
-renderRoleUI();
-switchTab('play');renderCreatorGrid();renderGrid();refreshPublicGallery();restoreGalleryUrlToCreator();
+loadGallery();
 </script>
 </body>
 </html>
